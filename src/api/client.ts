@@ -25,6 +25,21 @@ async function request<T = unknown>(path: string, options: RequestInit = {}): Pr
   return data as T;
 }
 
+async function uploadFile(path: string, file: File, extra: Record<string, string> = {}): Promise<BookResponse> {
+  const token = getToken();
+  const fd = new FormData();
+  fd.append('file', file);
+  for (const [k, v] of Object.entries(extra)) fd.append(k, v);
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${BASE}${path}`, { method: 'POST', headers, body: fd });
+  const text = await res.text();
+  if (!text) throw new Error('Respuesta vacía del servidor');
+  const data = JSON.parse(text);
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data as BookResponse;
+}
+
 export const api = {
   auth: {
     register: (body: { email: string; password: string; name: string }) =>
@@ -36,6 +51,12 @@ export const api = {
   books: {
     list: () => request<BookResponse[]>('/books'),
     get: (id: string) => request<BookResponse>(`/books/${id}`),
+    upload: (file: File, title?: string, author?: string) => {
+      const extra: Record<string, string> = {};
+      if (title) extra.title = title;
+      if (author) extra.author = author;
+      return uploadFile('/books', file, extra);
+    },
   },
   progress: {
     get: (bookId: string) => request<ProgressData>(`/progress/${bookId}`),

@@ -2,9 +2,26 @@ import { Router } from 'express';
 import { Book } from '../models/Book.js';
 import { Progress } from '../models/Progress.js';
 import fs from 'fs';
+import path from 'path';
+import multer from 'multer';
 import type { AuthRequest } from '../middleware/auth.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { ensureBookFile, getLocalFilePath } from '../utils/bookFile.js';
+
+const EPUB_DIR = path.resolve(import.meta.dirname, '../../epubs');
+
+const upload = multer({
+  dest: EPUB_DIR,
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ext === '.epub' || ext === '.pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos .epub y .pdf'));
+    }
+  },
+});
 
 const router = Router();
 
@@ -53,6 +70,47 @@ router.get('/', async (req: AuthRequest, res) => {
     res.json(result);
   } catch {
     res.status(500).json({ error: 'Failed to fetch books' });
+  }
+});
+
+router.post('/', upload.single('file'), async (req: AuthRequest, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No se envió ningún archivo' });
+      return;
+    }
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const format = ext === '.pdf' ? 'pdf' : 'epub';
+    const title = (req.body.title || path.parse(req.file.originalname).name).trim();
+    const author = (req.body.author || '').trim();
+
+    const book = await Book.create({
+      userId: req.userId,
+      title,
+      author,
+      description: '',
+      coverUrl: '',
+      fileUrl: '',
+      format,
+    });
+
+    const bookId = book._id.toString();
+    const destPath = path.join(EPUB_DIR, `${bookId}${ext}`);
+    fs.renameSync(req.file.path, destPath);
+
+    await Progress.create({
+      userId: req.userId,
+      bookId,
+      currentPage: 1,
+      totalPages: 100,
+      progress: 0,
+    });
+
+    res.status(201).json({ ...book.toObject(), _id: bookId, userId: req.userId });
+  } catch (err) {
+    console.error('Upload error:', err);
+    const msg = err instanceof Error ? err.message : 'Error al subir el archivo';
+    res.status(400).json({ error: msg });
   }
 });
 

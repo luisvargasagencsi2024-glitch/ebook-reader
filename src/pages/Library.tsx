@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
 import { api, type BookResponse } from '../api/client';
@@ -70,6 +70,8 @@ export function Library() {
   const [selectedBook, setSelectedBook] = useState<BookResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadBooks = () => {
     setLoading(true);
@@ -97,6 +99,18 @@ export function Library() {
 
   useEffect(loadBooks, []);
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      await api.books.upload(file);
+      loadBooks();
+    } catch {}
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSeed = async () => {
     setSeeding(true);
     try {
@@ -112,6 +126,16 @@ export function Library() {
       <header className="library__header">
         <h1 className="library__title">Mi Biblioteca</h1>
         <div className="library__header-actions">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".epub,.pdf"
+            onChange={handleUpload}
+            style={{ display: 'none' }}
+          />
+          <button className="library__btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+            {uploading ? '...' : 'Subir libro'}
+          </button>
           <button className="library__btn" onClick={handleSeed} disabled={seeding}>
             {seeding ? '...' : 'Agregar demo'}
           </button>
