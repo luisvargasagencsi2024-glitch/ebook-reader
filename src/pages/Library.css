@@ -9,7 +9,7 @@
 }
 
 .library {
-  min-height: 100vh;
+  height: 100vh;
   background: var(--ambient-glow);
   overflow-y: auto;
 }
