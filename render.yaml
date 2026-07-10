@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ebook-reader
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && MONGODB_MEMORY_SERVER_SKIP_POSTINSTALL=true npm --prefix backend install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
