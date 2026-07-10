@@ -6,7 +6,7 @@ import fs from 'fs';
 dotenv.config();
 
 export async function connectDB() {
-  const uri = process.env.MONGODB_URI;
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URL;
   if (uri) {
     await mongoose.connect(uri);
     console.log('MongoDB connected to:', uri);
