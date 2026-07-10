@@ -98,3 +98,44 @@
 .reader-sidebar__item-delete:hover {
   text-decoration: underline;
 }
+
+.reader-sidebar__note-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.reader-sidebar__note-input {
+  resize: vertical;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.reader-sidebar__note-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.reader-sidebar__note-btn {
+  align-self: flex-end;
+  padding: 0.35rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.reader-sidebar__note-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

@@ -32,10 +32,57 @@ function getCfiFromRange(_range: Range, rendition: Record<string, unknown>): str
   return '';
 }
 
+function findTextInDoc(doc: Document, text: string): Range | null {
+  const body = doc.body;
+  if (!body || !text) return null;
+  const fullText = body.textContent || '';
+  const idx = fullText.indexOf(text);
+  if (idx === -1) return null;
+  const treeWalker = doc.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+  const textNodes: Text[] = [];
+  let node: Text | null;
+  while ((node = treeWalker.nextNode() as Text | null)) {
+    textNodes.push(node);
+  }
+  let charCount = 0;
+  let startNode: Text | null = null;
+  let startOffset = 0;
+  let endNode: Text | null = null;
+  let endOffset = 0;
+  let found = false;
+  for (const tn of textNodes) {
+    const len = tn.textContent?.length ?? 0;
+    if (!found) {
+      if (charCount + len > idx) {
+        startNode = tn;
+        startOffset = idx - charCount;
+        found = true;
+      }
+    }
+    if (found) {
+      if (charCount + len >= idx + text.length) {
+        endNode = tn;
+        endOffset = idx + text.length - charCount;
+        break;
+      }
+    }
+    charCount += len;
+  }
+  if (!startNode || !endNode) return null;
+  try {
+    const range = doc.createRange();
+    range.setStart(startNode, startOffset);
+    range.setEnd(endNode, endOffset);
+    return range;
+  } catch {
+    return null;
+  }
+}
+
 export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, onHighlightCreated }: EpubReaderProps) {
   const [location, setLocation] = useState<string | number>(0);
   const [toc, setToc] = useState<TocItem[]>([]);
-  const renditionRef = useRef<Record<string, unknown> | null>(null);
+  const [rendition, setRendition] = useState<Record<string, unknown> | null>(null);
   const [toolbar, setToolbar] = useState<{ visible: boolean; top: number; left: number; text: string; range: Range | null }>({ visible: false, top: 0, left: 0, text: '', range: null });
   const [highlights, setHighlights] = useState<HighlightData[]>([]);
   const appliedHighlightKeys = useRef<Set<string>>(new Set());
@@ -46,6 +93,18 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
     }
   }, [bookId]);
 
+  useEffect(() => {
+    const r = rendition;
+    if (!r) return;
+    const renderer = (r as Record<string, unknown>).renderer as { getContents?: () => { document?: Document }[] } | undefined;
+    if (!renderer) return;
+    const contents = renderer.getContents?.() ?? [];
+    for (const c of contents) {
+      const doc = c.document;
+      if (doc) doc.documentElement.style.fontSize = `${fontSize}px`;
+    }
+  }, [fontSize, rendition]);
+
   const tocChanged = useCallback((items: TocItem[]) => {
     setToc(items);
   }, []);
@@ -53,42 +112,31 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
   const locationChanged = useCallback(
     (epubcfi: string) => {
       setLocation(epubcfi);
-      const r = renditionRef.current;
+      const r = rendition;
       let pct = 0;
       if (r && typeof r.locations === 'object' && r.locations && typeof (r.locations as Record<string, unknown>).percentageFromCfi === 'function') {
         pct = ((r.locations as Record<string, unknown>).percentageFromCfi as (cfi: string) => number)(epubcfi);
       }
       onLocationChange?.(epubcfi, pct);
     },
-    [onLocationChange],
+    [onLocationChange, rendition],
   );
 
   const applyHighlightToDoc = useCallback((doc: Document, hlText: string, key: string) => {
     if (appliedHighlightKeys.current.has(key)) return;
-    const body = doc.body;
-    if (!body || !hlText) return;
-    const walker = doc.createTreeWalker(body, NodeFilter.SHOW_TEXT);
-    let node: Text | null;
-    while ((node = walker.nextNode() as Text | null)) {
-      const idx = node.textContent?.indexOf(hlText);
-      if (idx !== undefined && idx !== -1) {
-        try {
-          const range = doc.createRange();
-          range.setStart(node, idx);
-          range.setEnd(node, idx + hlText.length);
-          const span = doc.createElement('span');
-          span.style.background = '#fef08a';
-          span.style.borderRadius = '2px';
-          range.surroundContents(span);
-          appliedHighlightKeys.current.add(key);
-        } catch {}
-        break;
-      }
-    }
+    const range = findTextInDoc(doc, hlText);
+    if (!range) return;
+    try {
+      const span = doc.createElement('span');
+      span.style.background = '#fef08a';
+      span.style.borderRadius = '2px';
+      range.surroundContents(span);
+      appliedHighlightKeys.current.add(key);
+    } catch {}
   }, []);
 
   const restoreHighlights = useCallback(() => {
-    const r = renditionRef.current;
+    const r = rendition;
     if (!r || highlights.length === 0) return;
     const renderer = (r as Record<string, unknown>).renderer as { getContents: () => { document?: Document }[] } | undefined;
     if (!renderer) return;
@@ -101,14 +149,14 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
         applyHighlightToDoc(doc, hl.text, key);
       }
     }
-  }, [highlights, applyHighlightToDoc]);
+  }, [highlights, applyHighlightToDoc, rendition]);
 
   useEffect(() => {
     restoreHighlights();
   }, [restoreHighlights]);
 
   useEffect(() => {
-    const r = renditionRef.current;
+    const r = rendition;
     if (!r) return;
     const renderer = (r as Record<string, unknown>).renderer as {
       addEventListener?: (e: string, cb: (e: CustomEvent) => void) => void;
@@ -116,10 +164,12 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
     } | undefined;
     if (!renderer) return;
 
+    const contents = renderer.getContents?.() ?? [];
+
     const handleSelection = () => {
-      const contents = renderer.getContents?.();
-      if (!contents) return;
-      for (const c of contents) {
+      const currentContents = renderer.getContents?.();
+      if (!currentContents) return;
+      for (const c of currentContents) {
         const doc = c.document;
         if (!doc) continue;
         const sel = doc.getSelection();
@@ -128,15 +178,14 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
         const text = range.toString().trim();
         if (!text || text.length < 2) return;
 
-        const vr = doc.querySelector('.epub-reader__view')?.getBoundingClientRect();
-        const host = document.querySelector('.epub-reader__view')?.getBoundingClientRect();
-        if (!vr || !host) return;
-
         const rect = range.getBoundingClientRect();
+        const iFrame = doc.defaultView?.frameElement as HTMLElement | null;
+        const iframeRect = iFrame?.getBoundingClientRect();
+
         setToolbar({
           visible: true,
-          top: rect.top - vr.top + host.top - 50,
-          left: rect.left - vr.left + host.left + rect.width / 2,
+          top: (iframeRect?.top ?? 0) + rect.top - 50,
+          left: (iframeRect?.left ?? 0) + rect.left + rect.width / 2,
           text,
           range,
         });
@@ -148,7 +197,7 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
       setToolbar(prev => ({ ...prev, visible: false }));
     };
 
-    for (const c of renderer.getContents?.() ?? []) {
+    for (const c of contents) {
       c.document?.addEventListener('mouseup', handleSelection);
       c.document?.addEventListener('mousedown', handleMouseDown);
     }
@@ -163,11 +212,11 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
         c.document?.removeEventListener('mousedown', handleMouseDown);
       }
     };
-  }, [renditionRef.current, restoreHighlights]);
+  }, [rendition, restoreHighlights]);
 
   const handleHighlight = async () => {
     if (!toolbar.range || !toolbar.text || !bookId) return;
-    const r = renditionRef.current;
+    const r = rendition;
     if (!r) return;
 
     const cfi = getCfiFromRange(toolbar.range, r);
@@ -194,7 +243,7 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
   };
 
   const handleTocClick = (href: string) => {
-    const r = renditionRef.current;
+    const r = rendition;
     if (r && typeof r.goToChapter === 'function') {
       (r.goToChapter as (h: string) => void)(href);
     }
@@ -240,12 +289,7 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
             location={location}
             locationChanged={locationChanged}
             tocChanged={tocChanged}
-            getRendition={(rendition: Record<string, unknown>) => {
-              renditionRef.current = rendition;
-            }}
-            readerStyles={{
-              fontSize: `${fontSize}px`,
-            }}
+            getRendition={(r) => setRendition(r)}
             epubOptions={{
               spread: 'none',
             }}

@@ -14,12 +14,24 @@ export function ReaderSidebar({ bookId, onClose }: ReaderSidebarProps) {
   const [notes, setNotes] = useState<NoteData[]>([]);
   const [highlights, setHighlights] = useState<HighlightData[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkData[]>([]);
+  const [noteText, setNoteText] = useState('');
 
   useEffect(() => {
     api.notes.list(bookId).then(setNotes).catch(() => {});
     api.highlights.list(bookId).then(setHighlights).catch(() => {});
     api.bookmarks.list(bookId).then(setBookmarks).catch(() => {});
   }, [bookId]);
+
+  const handleCreateNote = async () => {
+    const text = noteText.trim();
+    if (!text) return;
+    try {
+      await api.notes.create({ bookId, page: 0, location: '', text, content: text });
+      setNoteText('');
+      const updated = await api.notes.list(bookId);
+      setNotes(updated);
+    } catch {}
+  };
 
   const handleDeleteNote = async (id: string) => {
     try { await api.notes.delete(id); setNotes(prev => prev.filter(n => n._id !== id)); } catch { }
@@ -47,6 +59,20 @@ export function ReaderSidebar({ bookId, onClose }: ReaderSidebarProps) {
       </div>
 
       <div className="reader-sidebar__content">
+        {tab === 'notes' && (
+          <div className="reader-sidebar__note-form">
+            <textarea
+              className="reader-sidebar__note-input"
+              placeholder="Escribe una nota..."
+              value={noteText}
+              onChange={e => setNoteText(e.target.value)}
+              rows={3}
+            />
+            <button className="reader-sidebar__note-btn" onClick={handleCreateNote} disabled={!noteText.trim()}>
+              Agregar nota
+            </button>
+          </div>
+        )}
         {tab === 'notes' && notes.length === 0 && (
           <p className="reader-sidebar__empty">Sin notas aún</p>
         )}
@@ -54,7 +80,7 @@ export function ReaderSidebar({ bookId, onClose }: ReaderSidebarProps) {
           <div key={note._id} className="reader-sidebar__item">
             <p className="reader-sidebar__item-text">{note.content}</p>
             <small className="reader-sidebar__item-meta">
-              Pág. {note.page} · {new Date(note.createdAt).toLocaleDateString()}
+              {new Date(note.createdAt).toLocaleDateString()}
             </small>
             <button className="reader-sidebar__item-delete" onClick={() => handleDeleteNote(note._id)}>Eliminar</button>
           </div>
