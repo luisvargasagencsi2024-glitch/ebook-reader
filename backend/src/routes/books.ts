@@ -34,7 +34,7 @@ router.get('/:id/file', async (req, res) => {
         res.status(404).json({ error: 'Book not found' });
         return;
       }
-      ensureBookFile(req.params.id, book.fileUrl || '', book.title, book.format);
+      await ensureBookFile(req.params.id, book.fileUrl || '', book.title, book.format);
       localPath = getLocalFilePath(req.params.id);
     }
     if (localPath) {

@@ -12,3 +12,5 @@ services:
         value: 22
       - key: MONGODB_URI
         sync: false
+      - key: WEBHOOK_SECRET
+        sync: false

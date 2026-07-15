@@ -3,7 +3,7 @@ import path from 'path';
 
 const EPUB_DIR = path.resolve(import.meta.dirname, '../../epubs');
 
-export function ensureBookFile(bookId: string, _remoteUrl: string, title: string, format: string): string {
+export async function ensureBookFile(bookId: string, remoteUrl: string, title: string, format: string): Promise<string> {
   fs.mkdirSync(EPUB_DIR, { recursive: true });
 
   const ext = format === 'pdf' ? '.pdf' : format === 'audio' ? '.mp3' : '.epub';
@@ -18,6 +18,21 @@ export function ensureBookFile(bookId: string, _remoteUrl: string, title: string
   if (fs.existsSync(byTitle)) {
     fs.copyFileSync(byTitle, localPath);
     return localPath;
+  }
+
+  if (remoteUrl) {
+    try {
+      const res = await fetch(remoteUrl);
+      if (res.ok) {
+        const buffer = Buffer.from(await res.arrayBuffer());
+        fs.writeFileSync(localPath, buffer);
+        console.log(`Downloaded: ${remoteUrl} -> ${localPath}`);
+        return localPath;
+      }
+      console.warn(`Failed to download ${remoteUrl}: HTTP ${res.status}`);
+    } catch (err) {
+      console.warn(`Error downloading ${remoteUrl}:`, err);
+    }
   }
 
   console.warn(`No ${ext} file found for: ${title}`);
