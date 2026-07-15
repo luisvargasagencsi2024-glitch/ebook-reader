@@ -79,20 +79,11 @@ export function Library() {
     api.books.list()
       .then(list => {
         setBooks(list);
-        if (list.length === 0) {
-          fetch('/api/seed/demo', { method: 'POST', headers: { Authorization: `Bearer ${useAuth.getState().token}` } })
-            .then(r => r.json())
-            .then(d => {
-              if (d.message) return api.books.list().then(setBooks);
-            })
-            .catch(() => {});
-        } else {
-          list.forEach(book => {
-            if (!book.coverUrl) {
-              fetchCover(book.title).then(url => { if (url) setCovers(prev => ({ ...prev, [book._id]: url })); });
-            }
-          });
-        }
+        list.forEach(book => {
+          if (!book.coverUrl) {
+            fetchCover(book.title).then(url => { if (url) setCovers(prev => ({ ...prev, [book._id]: url })); });
+          }
+        });
       })
       .catch(() => {})
       .finally(() => setLoading(false));
