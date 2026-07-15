@@ -12,13 +12,13 @@ const EPUB_DIR = path.resolve(import.meta.dirname, '../../epubs');
 
 const upload = multer({
   dest: EPUB_DIR,
-  limits: { fileSize: 50 * 1024 * 1024 },
+  limits: { fileSize: 200 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (ext === '.epub' || ext === '.pdf') {
+    if (ext === '.epub' || ext === '.pdf' || ext === '.mp3' || ext === '.m4a') {
       cb(null, true);
     } else {
-      cb(new Error('Solo se permiten archivos .epub y .pdf'));
+      cb(new Error('Solo se permiten archivos .epub, .pdf, .mp3 y .m4a'));
     }
   },
 });
@@ -39,8 +39,14 @@ router.get('/:id/file', async (req, res) => {
     }
     if (localPath) {
       const buffer = fs.readFileSync(localPath);
-      const isPdf = localPath.endsWith('.pdf');
-      res.setHeader('Content-Type', isPdf ? 'application/pdf' : 'application/epub+zip');
+      const ext = path.extname(localPath).toLowerCase();
+      const mime: Record<string, string> = {
+        '.epub': 'application/epub+zip',
+        '.pdf': 'application/pdf',
+        '.mp3': 'audio/mpeg',
+        '.m4a': 'audio/mp4',
+      };
+      res.setHeader('Content-Type', mime[ext] || 'application/octet-stream');
       res.setHeader('Content-Length', buffer.length);
       res.end(buffer);
       return;
@@ -80,7 +86,7 @@ router.post('/', upload.single('file'), async (req: AuthRequest, res) => {
       return;
     }
     const ext = path.extname(req.file.originalname).toLowerCase();
-    const format = ext === '.pdf' ? 'pdf' : 'epub';
+    const format = ext === '.pdf' ? 'pdf' : (ext === '.mp3' || ext === '.m4a') ? 'audio' : 'epub';
     const title = (req.body.title || path.parse(req.file.originalname).name).trim();
     const author = (req.body.author || '').trim();
 

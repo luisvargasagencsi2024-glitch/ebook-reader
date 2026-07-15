@@ -7,7 +7,7 @@ export interface IBook extends Document {
   description: string;
   coverUrl: string;
   fileUrl: string;
-  format: 'epub' | 'pdf';
+  format: 'epub' | 'pdf' | 'audio';
   createdAt: Date;
 }
 
@@ -18,7 +18,7 @@ const bookSchema = new Schema<IBook>({
   description: { type: String, default: '' },
   coverUrl: { type: String, default: '' },
   fileUrl: { type: String, default: '' },
-  format: { type: String, enum: ['epub', 'pdf'], required: true },
+  format: { type: String, enum: ['epub', 'pdf', 'audio'], required: true },
   createdAt: { type: Date, default: Date.now },
 });
 

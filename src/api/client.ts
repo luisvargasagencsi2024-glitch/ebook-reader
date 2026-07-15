@@ -101,7 +101,7 @@ export interface BookResponse {
   description?: string;
   coverUrl: string;
   fileUrl: string;
-  format: 'epub' | 'pdf';
+  format: 'epub' | 'pdf' | 'audio';
   createdAt: string;
   progress: ProgressData | null;
 }

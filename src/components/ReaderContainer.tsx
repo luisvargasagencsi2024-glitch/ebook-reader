@@ -10,7 +10,7 @@ import type { ProgressData } from '../api/client';
 interface ReaderContainerProps {
   bookId?: string;
   bookFileUrl?: string;
-  bookFormat?: 'epub' | 'pdf';
+  bookFormat?: 'epub' | 'pdf' | 'audio';
   bookTitle?: string;
   bookAuthor?: string;
   bookDescription?: string;
@@ -122,7 +122,7 @@ export function ReaderContainer({
 
   const resolvedFile = externalFile ?? localFile;
   const format = resolvedFile
-    ? (resolvedFile.name.endsWith('.pdf') ? 'pdf' : 'epub')
+    ? (resolvedFile.name.endsWith('.pdf') ? 'pdf' : resolvedFile.name.match(/\.(mp3|m4a)$/i) ? 'audio' : 'epub')
     : bookFormat;
 
   const hasFile = !!resolvedFile || (!!bookFileUrl && !!bookFormat);

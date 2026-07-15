@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, type BookResponse, type ProgressData } from '../api/client';
 import { ReaderContainer } from '../components/ReaderContainer';
+import { AudioPlayer } from '../components/AudioPlayer';
 
 export function ReaderPage() {
   const { bookId } = useParams<{ bookId: string }>();
@@ -47,6 +48,19 @@ export function ReaderPage() {
   }
 
   const fileUrl = `/api/books/${bookId}/file`;
+
+  if (book.format === 'audio') {
+    return (
+      <AudioPlayer
+        url={fileUrl}
+        title={book.title}
+        bookId={bookId!}
+        progress={progress}
+        onProgressSave={handleProgressSave}
+        onBack={() => navigate('/library')}
+      />
+    );
+  }
 
   return (
     <ReaderContainer

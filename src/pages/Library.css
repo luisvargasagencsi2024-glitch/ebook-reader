@@ -65,6 +65,33 @@
   padding: 2rem;
 }
 
+.library__filter {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.library__filter-btn {
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.library__filter-btn:hover {
+  background: var(--surface-hover);
+}
+
+.library__filter-btn--active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
 .library__loading {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

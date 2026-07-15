@@ -34,7 +34,9 @@ export function BookDetailModal({ book, coverUrl, onStart, onClose }: BookDetail
           <div className="book-detail-info">
             <h2 className="book-detail-title">{book.title}</h2>
             {book.author && <p className="book-detail-author">{book.author}</p>}
-            <span className="book-detail-format">{book.format === 'epub' ? 'EPUB' : 'PDF'}</span>
+            <span className="book-detail-format">
+              {book.format === 'epub' ? 'EPUB' : book.format === 'pdf' ? 'PDF' : 'Audio'}
+            </span>
 
             {book.description && (
               <p className="book-detail-description">{book.description}</p>
@@ -46,7 +48,7 @@ export function BookDetailModal({ book, coverUrl, onStart, onClose }: BookDetail
                   <div className="book-detail-progress-bar">
                     <div className="book-detail-progress-fill" style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="book-detail-progress-text">{pct}% leído</span>
+                  <span className="book-detail-progress-text">{pct}% {book.format === 'audio' ? 'escuchado' : 'leído'}</span>
                 </>
               ) : (
                 <span className="book-detail-progress-text">Nuevo</span>
@@ -54,7 +56,9 @@ export function BookDetailModal({ book, coverUrl, onStart, onClose }: BookDetail
             </div>
 
             <button className="book-detail-btn" onClick={onStart}>
-              {pct > 0 ? 'Continuar leyendo' : 'Comenzar a leer'}
+              {pct > 0
+                ? (book.format === 'audio' ? 'Continuar escuchando' : 'Continuar leyendo')
+                : (book.format === 'audio' ? 'Comenzar a escuchar' : 'Comenzar a leer')}
             </button>
           </div>
         </div>

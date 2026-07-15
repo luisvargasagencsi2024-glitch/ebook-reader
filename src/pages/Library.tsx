@@ -71,6 +71,7 @@ export function Library() {
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'epub' | 'pdf' | 'audio'>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadBooks = () => {
@@ -129,12 +130,12 @@ export function Library() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".epub,.pdf"
+            accept=".epub,.pdf,.mp3,.m4a"
             onChange={handleUpload}
             style={{ display: 'none' }}
           />
           <button className="library__btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-            {uploading ? '...' : 'Subir libro'}
+            {uploading ? '...' : 'Subir archivo'}
           </button>
           <button className="library__btn" onClick={handleSeed} disabled={seeding}>
             {seeding ? '...' : 'Agregar demo'}
@@ -164,8 +165,20 @@ export function Library() {
         )}
 
         {!loading && books.length > 0 && (
+          <>
+          <div className="library__filter">
+            {(['all', 'epub', 'pdf', 'audio'] as const).map(f => (
+              <button
+                key={f}
+                className={`library__filter-btn ${filter === f ? 'library__filter-btn--active' : ''}`}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'all' ? 'Todos' : f === 'epub' ? 'EPUB' : f === 'pdf' ? 'PDF' : 'Audio'}
+              </button>
+            ))}
+          </div>
           <div className="library__grid">
-            {books.map((book, index) => {
+            {books.filter(b => filter === 'all' || b.format === filter).map((book, index) => {
               const pct = book.progress ? Math.round(book.progress.progress * 100) : 0;
               const coverSrc = book.coverUrl || covers[book._id];
               return (
@@ -198,11 +211,11 @@ export function Library() {
                         <div className="library__card-progress-bar">
                           <div className="library__card-progress-fill" style={{ width: `${pct}%` }} />
                         </div>
-                        <p className="library__card-progress-text">{pct}% leído</p>
+                        <p className="library__card-progress-text">{pct}% {book.format === 'audio' ? 'escuchado' : 'leído'}</p>
                       </div>
                     ) : (
                       <p className="library__card-action">
-                        {book.progress ? 'Continuar leyendo →' : 'Comenzar a leer →'}
+                        {book.progress ? (book.format === 'audio' ? 'Continuar escuchando →' : 'Continuar leyendo →') : (book.format === 'audio' ? 'Comenzar a escuchar →' : 'Comenzar a leer →')}
                       </p>
                     )}
                   </div>
@@ -210,6 +223,7 @@ export function Library() {
               );
             })}
           </div>
+          </>
         )}
       </main>
 

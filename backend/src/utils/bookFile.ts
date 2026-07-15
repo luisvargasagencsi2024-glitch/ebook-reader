@@ -6,7 +6,7 @@ const EPUB_DIR = path.resolve(import.meta.dirname, '../../epubs');
 export function ensureBookFile(bookId: string, _remoteUrl: string, title: string, format: string): string {
   fs.mkdirSync(EPUB_DIR, { recursive: true });
 
-  const ext = format === 'pdf' ? '.pdf' : '.epub';
+  const ext = format === 'pdf' ? '.pdf' : format === 'audio' ? '.mp3' : '.epub';
   const localPath = path.join(EPUB_DIR, `${bookId}${ext}`);
 
   if (fs.existsSync(localPath)) return localPath;
@@ -25,9 +25,10 @@ export function ensureBookFile(bookId: string, _remoteUrl: string, title: string
 }
 
 export function getLocalFilePath(bookId: string): string | null {
-  const epub = path.join(EPUB_DIR, `${bookId}.epub`);
-  if (fs.existsSync(epub)) return epub;
-  const pdf = path.join(EPUB_DIR, `${bookId}.pdf`);
-  if (fs.existsSync(pdf)) return pdf;
+  const exts = ['.epub', '.pdf', '.mp3', '.m4a'];
+  for (const ext of exts) {
+    const p = path.join(EPUB_DIR, `${bookId}${ext}`);
+    if (fs.existsSync(p)) return p;
+  }
   return null;
 }
