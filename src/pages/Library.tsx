@@ -81,7 +81,12 @@ export function Library() {
         setBooks(list);
         list.forEach(book => {
           if (!book.coverUrl) {
-            fetchCover(book.title).then(url => { if (url) setCovers(prev => ({ ...prev, [book._id]: url })); });
+            fetchCover(book.title).then(url => {
+              if (url) {
+                setCovers(prev => ({ ...prev, [book._id]: url }));
+                api.books.updateCover(book._id, url).catch(() => {});
+              }
+            });
           }
         });
       })

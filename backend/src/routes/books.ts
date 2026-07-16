@@ -120,6 +120,28 @@ router.post('/', upload.single('file'), async (req: AuthRequest, res) => {
   }
 });
 
+router.put('/:id/cover', async (req: AuthRequest, res) => {
+  try {
+    const { coverUrl } = req.body;
+    if (typeof coverUrl !== 'string') {
+      res.status(400).json({ error: 'coverUrl is required' });
+      return;
+    }
+    const book = await Book.findOneAndUpdate(
+      { _id: req.params.id, userId: req.userId },
+      { coverUrl },
+      { new: true },
+    ).lean();
+    if (!book) {
+      res.status(404).json({ error: 'Book not found' });
+      return;
+    }
+    res.json({ coverUrl: book.coverUrl });
+  } catch {
+    res.status(500).json({ error: 'Failed to update cover' });
+  }
+});
+
 router.get('/:id', async (req: AuthRequest, res) => {
   try {
     const book = await Book.findOne({ _id: req.params.id, userId: req.userId }).lean();

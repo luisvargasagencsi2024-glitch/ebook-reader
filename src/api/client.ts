@@ -57,6 +57,8 @@ export const api = {
       if (author) extra.author = author;
       return uploadFile('/books', file, extra);
     },
+    updateCover: (id: string, coverUrl: string) =>
+      request<{ coverUrl: string }>(`/books/${id}/cover`, { method: 'PUT', body: JSON.stringify({ coverUrl }) }),
   },
   progress: {
     get: (bookId: string) => request<ProgressData>(`/progress/${bookId}`),
