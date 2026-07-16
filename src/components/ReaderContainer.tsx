@@ -5,7 +5,9 @@ import { PdfReader } from './PdfReader';
 import { Toolbar } from './Toolbar';
 import { ReaderSidebar } from './ReaderSidebar';
 import { AiSummaryModal } from './AiSummaryModal';
+import { ReadingSettings, loadSettings, saveSettings } from './ReadingSettings';
 import type { ProgressData } from '../api/client';
+import type { ReaderSettings } from './ReadingSettings';
 
 interface ReaderContainerProps {
   bookId?: string;
@@ -48,6 +50,8 @@ export function ReaderContainer({
   const [showToc, setShowToc] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showAiSummary, setShowAiSummary] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [readerSettings, setReaderSettings] = useState<ReaderSettings>(loadSettings);
   const contentRef = useRef<HTMLDivElement>(null);
   const hasAutoFitted = useRef(false);
 
@@ -104,6 +108,11 @@ export function ReaderContainer({
     }
   }, [pdfPageSize]);
 
+  const handleSettingsChange = useCallback((s: ReaderSettings) => {
+    setReaderSettings(s);
+    saveSettings(s);
+  }, []);
+
   const toggleFullscreen = useCallback(async () => {
     if (!document.fullscreenElement) {
       await document.documentElement.requestFullscreen();
@@ -158,6 +167,7 @@ export function ReaderContainer({
         onAiSummary={() => setShowAiSummary(true)}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
+        onReadingSettings={() => setShowSettings(true)}
       />
       <div className="reader-layout__body">
         <div ref={contentRef} className="reader-layout__content">
@@ -165,6 +175,7 @@ export function ReaderContainer({
             <EpubReader
               url={bookFileUrl || URL.createObjectURL(resolvedFile!)}
               fontSize={fontSize}
+              readerSettings={readerSettings}
               showToc={showToc}
               bookId={bookId ?? ''}
               onLocationChange={handleEpubLocationChange}
@@ -189,6 +200,13 @@ export function ReaderContainer({
         <AiSummaryModal
           title={resolvedFile?.name || bookFileUrl?.split('/').pop() || 'Libro'}
           onClose={() => setShowAiSummary(false)}
+        />
+      )}
+      {showSettings && (
+        <ReadingSettings
+          settings={readerSettings}
+          onChange={handleSettingsChange}
+          onClose={() => setShowSettings(false)}
         />
       )}
     </div>

@@ -9,9 +9,16 @@ interface TocItem {
   subitems?: TocItem[];
 }
 
+export interface ReaderSettingsData {
+  fontFamily: 'serif' | 'sans' | 'mono';
+  lineHeight: number;
+  readerTheme: 'white' | 'sepia' | 'dark';
+}
+
 interface EpubReaderProps {
   url: string;
   fontSize: number;
+  readerSettings: ReaderSettingsData;
   showToc: boolean;
   bookId: string;
   onLocationChange?: (cfi: string, progress: number) => void;
@@ -79,7 +86,25 @@ function findTextInDoc(doc: Document, text: string): Range | null {
   }
 }
 
-export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, onHighlightCreated }: EpubReaderProps) {
+function getReaderCss(settings: ReaderSettingsData): string {
+  const fonts: Record<string, string> = {
+    serif: '"Georgia", "Times New Roman", serif',
+    sans: '-apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    mono: '"SF Mono", "Fira Code", "Consolas", monospace',
+  };
+  const themes: Record<string, { bg: string; text: string }> = {
+    white: { bg: '#ffffff', text: '#1a1a1a' },
+    sepia: { bg: '#f5e6c8', text: '#3b2a14' },
+    dark: { bg: '#1a1a2e', text: '#e0e0e0' },
+  };
+  const t = themes[settings.readerTheme];
+  return `
+    * { font-family: ${fonts[settings.fontFamily]} !important; line-height: ${settings.lineHeight} !important; }
+    body { background: ${t.bg} !important; color: ${t.text} !important; }
+  `;
+}
+
+export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onLocationChange, onHighlightCreated }: EpubReaderProps) {
   const [location, setLocation] = useState<string | number>(0);
   const [toc, setToc] = useState<TocItem[]>([]);
   const [rendition, setRendition] = useState<Record<string, unknown> | null>(null);
@@ -99,11 +124,21 @@ export function EpubReader({ url, fontSize, showToc, bookId, onLocationChange, o
     const renderer = (r as Record<string, unknown>).renderer as { getContents?: () => { document?: Document }[] } | undefined;
     if (!renderer) return;
     const contents = renderer.getContents?.() ?? [];
+    const cssText = getReaderCss(readerSettings);
     for (const c of contents) {
       const doc = c.document;
-      if (doc) doc.documentElement.style.fontSize = `${fontSize}px`;
+      if (!doc) continue;
+      doc.documentElement.style.fontSize = `${fontSize}px`;
+      const styleId = 'ebook-reader-custom-css';
+      let style = doc.getElementById(styleId) as HTMLStyleElement | null;
+      if (!style) {
+        style = doc.createElement('style');
+        style.id = styleId;
+        doc.head.appendChild(style);
+      }
+      style.textContent = cssText;
     }
-  }, [fontSize, rendition]);
+  }, [fontSize, readerSettings, rendition]);
 
   const tocChanged = useCallback((items: TocItem[]) => {
     setToc(items);
