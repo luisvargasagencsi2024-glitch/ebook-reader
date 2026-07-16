@@ -118,11 +118,7 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
     }
   }, [bookId]);
 
-  useEffect(() => {
-    const r = rendition;
-    if (!r) return;
-    const renderer = (r as Record<string, unknown>).renderer as { getContents?: () => { document?: Document }[] } | undefined;
-    if (!renderer) return;
+  const applyReaderSettings = useCallback((renderer: { getContents?: () => { document?: Document }[] }) => {
     const contents = renderer.getContents?.() ?? [];
     const cssText = getReaderCss(readerSettings);
     for (const c of contents) {
@@ -138,7 +134,15 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
       }
       style.textContent = cssText;
     }
-  }, [fontSize, readerSettings, rendition]);
+  }, [fontSize, readerSettings]);
+
+  useEffect(() => {
+    const r = rendition;
+    if (!r) return;
+    const renderer = (r as Record<string, unknown>).renderer as { getContents?: () => { document?: Document }[] } | undefined;
+    if (!renderer) return;
+    applyReaderSettings(renderer);
+  }, [applyReaderSettings, rendition]);
 
   const tocChanged = useCallback((items: TocItem[]) => {
     setToc(items);
@@ -238,7 +242,10 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
     }
 
     renderer.addEventListener?.('load', () => {
-      setTimeout(restoreHighlights, 500);
+      setTimeout(() => {
+        restoreHighlights();
+        applyReaderSettings(renderer);
+      }, 500);
     });
 
     return () => {
