@@ -153,6 +153,17 @@ export function Library() {
           <button className="library__btn library__btn--profile" onClick={() => setShowProfile(true)}>
             Perfil
           </button>
+          {user && user.role !== 'admin' && (
+            <button className="library__btn" onClick={async () => {
+              try {
+                const res = await api.auth.makeAdmin();
+                useAuth.setState({ token: res.token, user: res.user as any });
+                window.location.reload();
+              } catch {}
+            }}>
+              Reclamar admin
+            </button>
+          )}
           <span className="library__user-name">{user?.name}</span>
           <button className="library__btn" onClick={() => { logout(); navigate('/'); }}>
             Cerrar sesión

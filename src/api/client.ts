@@ -51,6 +51,8 @@ export const api = {
       request<{ id: string; email: string; name: string; role: string }>('/auth/profile', { method: 'PUT', body: JSON.stringify({ name }) }),
     changePassword: (oldPassword: string, newPassword: string) =>
       request<{ success: boolean }>('/auth/password', { method: 'PUT', body: JSON.stringify({ oldPassword, newPassword }) }),
+    makeAdmin: () =>
+      request<{ token: string; user: { id: string; email: string; name: string; role: string } }>('/auth/make-admin', { method: 'POST' }),
   },
   books: {
     list: () => request<BookResponse[]>('/books'),

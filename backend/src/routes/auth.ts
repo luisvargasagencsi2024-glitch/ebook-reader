@@ -17,7 +17,9 @@ router.post('/register', async (req, res) => {
       return;
     }
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, password: hashed, name, role: 'user' });
+    const userCount = await User.countDocuments();
+    const role = userCount === 0 ? 'admin' : 'user';
+    const user = await User.create({ email, password: hashed, name, role });
     const token = jwt.sign({ userId: user._id }, SECRET, { expiresIn: '7d' });
     res.status(201).json({
       token,
@@ -123,6 +125,32 @@ router.put('/password', authMiddleware, async (req: AuthRequest, res) => {
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+router.post('/make-admin', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    if (adminCount > 0) {
+      res.status(400).json({ error: 'An admin already exists' });
+      return;
+    }
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { role: 'admin' },
+      { new: true, select: '-password' }
+    );
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    const token = req.headers.authorization?.split(' ')[1];
+    res.json({
+      token,
+      user: { id: user._id, email: user.email, name: user.name, role: user.role },
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to make admin' });
   }
 });
 
