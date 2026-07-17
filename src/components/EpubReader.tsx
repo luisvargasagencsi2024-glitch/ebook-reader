@@ -23,6 +23,7 @@ interface EpubReaderProps {
   bookId: string;
   onLocationChange?: (cfi: string, progress: number) => void;
   onHighlightCreated?: () => void;
+  searchNavigateTo?: string | null;
 }
 
 function getCfiFromRange(_range: Range, rendition: Record<string, unknown>): string {
@@ -104,13 +105,20 @@ function getReaderCss(settings: ReaderSettingsData): string {
   `;
 }
 
-export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onLocationChange, onHighlightCreated }: EpubReaderProps) {
+export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onLocationChange, onHighlightCreated, searchNavigateTo }: EpubReaderProps) {
   const [location, setLocation] = useState<string | number>(0);
   const [toc, setToc] = useState<TocItem[]>([]);
   const [rendition, setRendition] = useState<Record<string, unknown> | null>(null);
   const [toolbar, setToolbar] = useState<{ visible: boolean; top: number; left: number; text: string; range: Range | null }>({ visible: false, top: 0, left: 0, text: '', range: null });
   const [highlights, setHighlights] = useState<HighlightData[]>([]);
   const appliedHighlightKeys = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!searchNavigateTo || !rendition) return;
+    if (typeof rendition.goToChapter === 'function') {
+      (rendition.goToChapter as (h: string) => void)(searchNavigateTo);
+    }
+  }, [searchNavigateTo, rendition]);
 
   useEffect(() => {
     if (bookId) {

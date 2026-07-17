@@ -6,6 +6,7 @@ import { Toolbar } from './Toolbar';
 import { ReaderSidebar } from './ReaderSidebar';
 import { AiSummaryModal } from './AiSummaryModal';
 import { ReadingSettings, loadSettings, saveSettings } from './ReadingSettings';
+import { SearchPanel } from './SearchPanel';
 import type { ProgressData } from '../api/client';
 import type { ReaderSettings } from './ReadingSettings';
 
@@ -51,6 +52,8 @@ export function ReaderContainer({
   const [showSidebar, setShowSidebar] = useState(false);
   const [showAiSummary, setShowAiSummary] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchNavigateTo, setSearchNavigateTo] = useState<string | null>(null);
   const [readerSettings, setReaderSettings] = useState<ReaderSettings>(loadSettings);
   const contentRef = useRef<HTMLDivElement>(null);
   const hasAutoFitted = useRef(false);
@@ -168,6 +171,7 @@ export function ReaderContainer({
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
         onReadingSettings={() => setShowSettings(true)}
+        onSearch={() => setShowSearch(true)}
       />
       <div className="reader-layout__body">
         <div ref={contentRef} className="reader-layout__content">
@@ -178,6 +182,7 @@ export function ReaderContainer({
               readerSettings={readerSettings}
               showToc={showToc}
               bookId={bookId ?? ''}
+              searchNavigateTo={searchNavigateTo}
               onLocationChange={handleEpubLocationChange}
               onHighlightCreated={() => setShowSidebar(true)}
             />
@@ -207,6 +212,17 @@ export function ReaderContainer({
           settings={readerSettings}
           onChange={handleSettingsChange}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showSearch && bookId && (
+        <SearchPanel
+          bookId={bookId}
+          onNavigate={(href) => {
+            setSearchNavigateTo(href);
+            setShowSearch(false);
+          }}
+          onClose={() => setShowSearch(false)}
         />
       )}
     </div>

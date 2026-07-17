@@ -63,6 +63,8 @@ export const api = {
     },
     updateCover: (id: string, coverUrl: string) =>
       request<{ coverUrl: string }>(`/books/${id}/cover`, { method: 'PUT', body: JSON.stringify({ coverUrl }) }),
+    search: (id: string, query: string) =>
+      request<SearchResult[]>(`/books/${id}/search?q=${encodeURIComponent(query)}`),
   },
   progress: {
     get: (bookId: string) => request<ProgressData>(`/progress/${bookId}`),
@@ -150,6 +152,12 @@ export interface BookmarkData {
   location: string;
   label: string;
   createdAt: string;
+}
+
+export interface SearchResult {
+  href: string;
+  chapterTitle: string;
+  snippet: string;
 }
 
 export interface SummaryData {
