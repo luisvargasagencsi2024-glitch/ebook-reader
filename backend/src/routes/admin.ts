@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
+import multer from 'multer';
 import { User } from '../models/User.js';
 import { Book } from '../models/Book.js';
 import { Progress } from '../models/Progress.js';
@@ -8,6 +9,20 @@ import { adminMiddleware } from '../middleware/admin.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const EPUB_DIR = path.resolve(import.meta.dirname, '../../epubs');
+
+const upload = multer({
+  dest: EPUB_DIR,
+  limits: { fileSize: 200 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (['.epub', '.pdf', '.mp3', '.m4a'].includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos .epub, .pdf, .mp3 y .m4a'));
+    }
+  },
+});
+
 const router = Router();
 router.use(adminMiddleware);
 
@@ -57,9 +72,13 @@ router.put('/users/:id/role', async (req: AuthRequest, res) => {
   }
 });
 
-router.get('/books', async (_req: AuthRequest, res) => {
+router.get('/books', async (req: AuthRequest, res) => {
   try {
-    const books = await Book.find().sort({ createdAt: -1 }).lean();
+    const filter: Record<string, unknown> = {};
+    if (req.query.userId) {
+      filter.userId = req.query.userId as string;
+    }
+    const books = await Book.find(filter).sort({ createdAt: -1 }).lean();
     const progressList = await Progress.find().lean();
     const progressByBook = Object.fromEntries(
       progressList.map(p => [p.bookId.toString(), p])
@@ -106,6 +125,82 @@ router.delete('/books/:id', async (req: AuthRequest, res) => {
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: 'Failed to delete book' });
+  }
+});
+
+router.post('/books/upload', upload.single('file'), async (req: AuthRequest, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No se envió ningún archivo' });
+      return;
+    }
+    const { targetUserId, title, author } = req.body;
+    if (!targetUserId) {
+      res.status(400).json({ error: 'targetUserId es requerido' });
+      return;
+    }
+    const targetUser = await User.findById(targetUserId).select('_id').lean();
+    if (!targetUser) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const format: 'epub' | 'pdf' | 'audio' =
+      ext === '.pdf' ? 'pdf' : (ext === '.mp3' || ext === '.m4a') ? 'audio' : 'epub';
+    const bookTitle = (title || path.parse(req.file.originalname).name).trim();
+    const bookAuthor = (author || '').trim();
+
+    const book = await Book.create({
+      userId: targetUserId,
+      title: bookTitle,
+      author: bookAuthor,
+      description: '',
+      coverUrl: '',
+      fileUrl: '',
+      format,
+    });
+
+    const bookId = book._id.toString();
+    const destPath = path.join(EPUB_DIR, `${bookId}${ext}`);
+    fs.renameSync(req.file.path, destPath);
+
+    await Progress.create({
+      userId: targetUserId,
+      bookId,
+      currentPage: 1,
+      totalPages: 100,
+      progress: 0,
+    });
+
+    res.status(201).json({ ...book.toObject(), _id: bookId, userId: targetUserId });
+  } catch (err) {
+    console.error('Admin upload error:', err);
+    const msg = err instanceof Error ? err.message : 'Error al subir el archivo';
+    res.status(400).json({ error: msg });
+  }
+});
+
+router.put('/books/:id/reassign', async (req: AuthRequest, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      res.status(400).json({ error: 'userId es requerido' });
+      return;
+    }
+    const targetUser = await User.findById(userId).select('_id').lean();
+    if (!targetUser) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+    const book = await Book.findByIdAndUpdate(req.params.id, { userId }, { new: true });
+    if (!book) {
+      res.status(404).json({ error: 'Libro no encontrado' });
+      return;
+    }
+    await Progress.updateMany({ bookId: req.params.id }, { userId });
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Failed to reassign book' });
   }
 });
 

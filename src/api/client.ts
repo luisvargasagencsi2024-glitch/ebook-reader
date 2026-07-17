@@ -104,8 +104,19 @@ export const api = {
     toggleUserActive: (id: string) => request<AdminUser>(`/admin/users/${id}/toggle-active`, { method: 'PUT' }),
     setUserRole: (id: string, role: string) =>
       request<AdminUser>(`/admin/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
-    listBooks: () => request<AdminBook[]>('/admin/books'),
+    listBooks: (userId?: string) => {
+      const qs = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+      return request<AdminBook[]>(`/admin/books${qs}`);
+    },
     deleteBook: (id: string) => request<{ success: boolean }>(`/admin/books/${id}`, { method: 'DELETE' }),
+    uploadBook: (file: File, targetUserId: string, title?: string, author?: string) => {
+      const extra: Record<string, string> = { targetUserId };
+      if (title) extra.title = title;
+      if (author) extra.author = author;
+      return uploadFile('/admin/books/upload', file, extra);
+    },
+    reassignBook: (bookId: string, userId: string) =>
+      request<{ success: boolean }>(`/admin/books/${bookId}/reassign`, { method: 'PUT', body: JSON.stringify({ userId }) }),
   },
   summaries: {
     list: (bookId: string) => request<SummaryData[]>(`/summaries/${bookId}`),
