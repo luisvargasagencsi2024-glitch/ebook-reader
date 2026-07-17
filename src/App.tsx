@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
+import { ToastContainer } from './components/ToastContainer';
 import { useAuth } from './store/auth';
 import { Login } from './pages/Login';
 import { Library } from './pages/Library';
@@ -53,9 +55,12 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <AppRoutes />
-      </ThemeProvider>
+      <ToastProvider>
+        <ThemeProvider>
+          <AppRoutes />
+          <ToastContainer />
+        </ThemeProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

@@ -82,6 +82,18 @@ body {
   background: var(--ambient-glow);
 }
 
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.3rem;
+}
+
 @keyframes pageIn {
   from {
     opacity: 0;
@@ -91,6 +103,10 @@ body {
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 @keyframes pageTurn {

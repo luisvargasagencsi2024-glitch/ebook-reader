@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
 import { api, type BookResponse } from '../api/client';
+import { useToast } from '../context/ToastContext';
 import { BookDetailModal } from '../components/BookDetailModal';
 import { ProfileModal } from '../components/ProfileModal';
 import { StatsModal } from '../components/StatsModal';
@@ -68,6 +69,7 @@ function SkeletonGrid() {
 export function Library() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [books, setBooks] = useState<BookResponse[]>([]);
   const [covers, setCovers] = useState<Record<string, string>>({});
   const [selectedBook, setSelectedBook] = useState<BookResponse | null>(null);
@@ -96,7 +98,7 @@ export function Library() {
           }
         });
       })
-      .catch(() => {})
+      .catch(() => { addToast('Error al cargar tus libros. Verifica tu conexión.', 'error'); })
       .finally(() => setLoading(false));
   };
 
@@ -109,7 +111,8 @@ export function Library() {
     try {
       await api.books.upload(file);
       loadBooks();
-    } catch {}
+      addToast('Libro subido correctamente', 'success');
+    } catch { addToast('Error al subir el archivo', 'error'); }
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -119,8 +122,8 @@ export function Library() {
     try {
       const res = await fetch('/api/seed/demo', { method: 'POST', headers: { Authorization: `Bearer ${useAuth.getState().token}` } });
       const data = await res.json();
-      if (data.message) loadBooks();
-    } catch { }
+      if (data.message) { loadBooks(); addToast('Libros demo agregados', 'success'); }
+    } catch { addToast('Error al agregar libros demo', 'error'); }
     setSeeding(false);
   };
 
@@ -139,10 +142,10 @@ export function Library() {
                 style={{ display: 'none' }}
               />
               <button className="library__btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                {uploading ? '...' : 'Subir archivo'}
+                {uploading ? <><span className="btn-spinner" />Subiendo...</> : 'Subir archivo'}
               </button>
               <button className="library__btn" onClick={handleSeed} disabled={seeding}>
-                {seeding ? '...' : 'Agregar demo'}
+                {seeding ? <><span className="btn-spinner" />Agregando...</> : 'Agregar demo'}
               </button>
             </>
           )}
@@ -158,7 +161,7 @@ export function Library() {
             Perfil
           </button>
           <span className="library__user-name">{user?.name}</span>
-          <button className="library__btn" onClick={() => { logout(); navigate('/'); }}>
+          <button className="library__btn" onClick={() => { if (window.confirm('¿Cerrar sesión?')) { logout(); navigate('/'); } }}>
             Cerrar sesión
           </button>
         </div>
@@ -194,6 +197,9 @@ export function Library() {
               </button>
             ))}
           </div>
+          {filter !== 'all' && books.filter(b => b.format === filter).length === 0 && (
+            <p className="library__filter-empty">No hay libros en formato {filter === 'epub' ? 'EPUB' : filter === 'pdf' ? 'PDF' : 'Audio'}</p>
+          )}
           <div className="library__grid">
             {books.filter(b => filter === 'all' || b.format === filter).map((book, index) => {
               const pct = book.progress ? Math.round(book.progress.progress * 100) : 0;
