@@ -130,11 +130,6 @@ router.put('/password', authMiddleware, async (req: AuthRequest, res) => {
 
 router.post('/make-admin', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const adminCount = await User.countDocuments({ role: 'admin' });
-    if (adminCount > 0) {
-      res.status(400).json({ error: 'An admin already exists' });
-      return;
-    }
     const user = await User.findByIdAndUpdate(
       req.userId,
       { role: 'admin' },
