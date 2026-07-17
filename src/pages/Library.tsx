@@ -132,23 +132,19 @@ export function Library() {
       <header className="library__header">
         <h1 className="library__title">Mi Biblioteca</h1>
         <div className="library__header-actions">
-          {user?.role === 'admin' && (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".epub,.pdf,.mp3,.m4a"
-                onChange={handleUpload}
-                style={{ display: 'none' }}
-              />
-              <button className="library__btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                {uploading ? <><span className="btn-spinner" />Subiendo...</> : 'Subir archivo'}
-              </button>
-              <button className="library__btn" onClick={handleSeed} disabled={seeding}>
-                {seeding ? <><span className="btn-spinner" />Agregando...</> : 'Agregar demo'}
-              </button>
-            </>
-          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".epub,.pdf,.mp3,.m4a"
+            onChange={handleUpload}
+            style={{ display: 'none' }}
+          />
+          <button className="library__btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+            {uploading ? <><span className="btn-spinner" />Subiendo...</> : 'Subir archivo'}
+          </button>
+          <button className="library__btn" onClick={handleSeed} disabled={seeding}>
+            {seeding ? <><span className="btn-spinner" />Agregando...</> : 'Agregar demo'}
+          </button>
           <button className="library__btn" onClick={() => setShowStats(true)}>
             Estadísticas
           </button>
