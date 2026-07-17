@@ -14,18 +14,6 @@ export function AdminModal({ onClose }: AdminModalProps) {
   const [books, setBooks] = useState<AdminBook[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadUsers = () => {
-    api.admin.listUsers()
-      .then(setUsers)
-      .catch(() => {});
-  };
-
-  const loadBooks = () => {
-    api.admin.listBooks()
-      .then(setBooks)
-      .catch(() => {});
-  };
-
   useEffect(() => {
     setLoading(true);
     Promise.all([api.admin.listUsers(), api.admin.listBooks()])

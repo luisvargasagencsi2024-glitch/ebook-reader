@@ -59,6 +59,11 @@ export function ReaderContainer({
   const hasAutoFitted = useRef(false);
   const readingDeltaRef = useRef(0);
 
+  const resolvedFile = externalFile ?? localFile;
+  const format = resolvedFile
+    ? (resolvedFile.name.endsWith('.pdf') ? 'pdf' : resolvedFile.name.match(/\.(mp3|m4a)$/i) ? 'audio' : 'epub')
+    : bookFormat;
+
   useEffect(() => {
     if (!format || format === 'audio') return;
     readingDeltaRef.current = 0;
@@ -145,11 +150,6 @@ export function ReaderContainer({
     document.addEventListener('fullscreenchange', onFSChange);
     return () => document.removeEventListener('fullscreenchange', onFSChange);
   }, []);
-
-  const resolvedFile = externalFile ?? localFile;
-  const format = resolvedFile
-    ? (resolvedFile.name.endsWith('.pdf') ? 'pdf' : resolvedFile.name.match(/\.(mp3|m4a)$/i) ? 'audio' : 'epub')
-    : bookFormat;
 
   const hasFile = !!resolvedFile || (!!bookFileUrl && !!bookFormat);
 

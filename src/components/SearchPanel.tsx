@@ -12,7 +12,6 @@ export function SearchPanel({ bookId, onNavigate, onClose }: SearchPanelProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [searched, setSearched] = useState(false);
   const [noResults, setNoResults] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -24,7 +23,6 @@ export function SearchPanel({ bookId, onNavigate, onClose }: SearchPanelProps) {
     const q = query.trim();
     if (!q || q.length < 2) return;
     setSearching(true);
-    setSearched(true);
     setNoResults(false);
     try {
       const res = await api.books.search(bookId, q);
