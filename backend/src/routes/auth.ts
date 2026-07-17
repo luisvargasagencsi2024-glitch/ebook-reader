@@ -17,11 +17,11 @@ router.post('/register', async (req, res) => {
       return;
     }
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, password: hashed, name });
+    const user = await User.create({ email, password: hashed, name, role: 'user' });
     const token = jwt.sign({ userId: user._id }, SECRET, { expiresIn: '7d' });
     res.status(201).json({
       token,
-      user: { id: user._id, email: user.email, name: user.name },
+      user: { id: user._id, email: user.email, name: user.name, role: user.role },
     });
   } catch (err) {
     res.status(500).json({ error: 'Registration failed' });
@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ userId: user._id }, SECRET, { expiresIn: '7d' });
     res.json({
       token,
-      user: { id: user._id, email: user.email, name: user.name },
+      user: { id: user._id, email: user.email, name: user.name, role: user.role },
     });
   } catch (err) {
     res.status(500).json({ error: 'Login failed' });
@@ -69,7 +69,7 @@ router.get('/me', async (req, res) => {
       res.status(404).json({ error: 'User not found' });
       return;
     }
-    res.json({ id: user._id, email: user.email, name: user.name });
+    res.json({ id: user._id, email: user.email, name: user.name, role: user.role });
   } catch {
     res.status(401).json({ error: 'Invalid token' });
   }
@@ -91,7 +91,7 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
       res.status(404).json({ error: 'User not found' });
       return;
     }
-    res.json({ id: user._id, email: user.email, name: user.name });
+    res.json({ id: user._id, email: user.email, name: user.name, role: user.role });
   } catch {
     res.status(500).json({ error: 'Failed to update profile' });
   }

@@ -5,6 +5,7 @@ import { api, type BookResponse } from '../api/client';
 import { BookDetailModal } from '../components/BookDetailModal';
 import { ProfileModal } from '../components/ProfileModal';
 import { StatsModal } from '../components/StatsModal';
+import { AdminModal } from '../components/AdminModal';
 import './Library.css';
 
 const COVER_CACHE = new Map<string, string>();
@@ -76,6 +77,7 @@ export function Library() {
   const [filter, setFilter] = useState<'all' | 'epub' | 'pdf' | 'audio'>('all');
   const [showProfile, setShowProfile] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadBooks = () => {
@@ -143,6 +145,11 @@ export function Library() {
           <button className="library__btn" onClick={() => setShowStats(true)}>
             Estadísticas
           </button>
+          {user?.role === 'admin' && (
+            <button className="library__btn" onClick={() => setShowAdmin(true)}>
+              Admin
+            </button>
+          )}
           <button className="library__btn library__btn--profile" onClick={() => setShowProfile(true)}>
             Perfil
           </button>
@@ -248,6 +255,10 @@ export function Library() {
 
       {showStats && (
         <StatsModal onClose={() => setShowStats(false)} />
+      )}
+
+      {showAdmin && (
+        <AdminModal onClose={() => setShowAdmin(false)} />
       )}
     </div>
   );

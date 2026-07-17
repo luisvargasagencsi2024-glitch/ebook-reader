@@ -43,12 +43,12 @@ async function uploadFile(path: string, file: File, extra: Record<string, string
 export const api = {
   auth: {
     register: (body: { email: string; password: string; name: string }) =>
-      request<{ token: string; user: { id: string; email: string; name: string } }>('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+      request<{ token: string; user: { id: string; email: string; name: string; role: string } }>('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
     login: (body: { email: string; password: string }) =>
-      request<{ token: string; user: { id: string; email: string; name: string } }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
-    me: () => request<{ id: string; email: string; name: string }>('/auth/me'),
+      request<{ token: string; user: { id: string; email: string; name: string; role: string } }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    me: () => request<{ id: string; email: string; name: string; role: string }>('/auth/me'),
     updateProfile: (name: string) =>
-      request<{ id: string; email: string; name: string }>('/auth/profile', { method: 'PUT', body: JSON.stringify({ name }) }),
+      request<{ id: string; email: string; name: string; role: string }>('/auth/profile', { method: 'PUT', body: JSON.stringify({ name }) }),
     changePassword: (oldPassword: string, newPassword: string) =>
       request<{ success: boolean }>('/auth/password', { method: 'PUT', body: JSON.stringify({ oldPassword, newPassword }) }),
   },
@@ -96,6 +96,14 @@ export const api = {
   },
   stats: {
     get: () => request<StatsData>('/stats'),
+  },
+  admin: {
+    listUsers: () => request<AdminUser[]>('/admin/users'),
+    toggleUserActive: (id: string) => request<AdminUser>(`/admin/users/${id}/toggle-active`, { method: 'PUT' }),
+    setUserRole: (id: string, role: string) =>
+      request<AdminUser>(`/admin/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+    listBooks: () => request<AdminBook[]>('/admin/books'),
+    deleteBook: (id: string) => request<{ success: boolean }>(`/admin/books/${id}`, { method: 'DELETE' }),
   },
   summaries: {
     list: (bookId: string) => request<SummaryData[]>(`/summaries/${bookId}`),
@@ -174,6 +182,20 @@ export interface StatsData {
     readingTimeMinutes: number;
     progress: number;
   }[];
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface AdminBook extends BookResponse {
+  ownerName: string;
+  ownerEmail: string;
 }
 
 export interface SummaryData {
