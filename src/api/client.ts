@@ -47,6 +47,10 @@ export const api = {
     login: (body: { email: string; password: string }) =>
       request<{ token: string; user: { id: string; email: string; name: string } }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
     me: () => request<{ id: string; email: string; name: string }>('/auth/me'),
+    updateProfile: (name: string) =>
+      request<{ id: string; email: string; name: string }>('/auth/profile', { method: 'PUT', body: JSON.stringify({ name }) }),
+    changePassword: (oldPassword: string, newPassword: string) =>
+      request<{ success: boolean }>('/auth/password', { method: 'PUT', body: JSON.stringify({ oldPassword, newPassword }) }),
   },
   books: {
     list: () => request<BookResponse[]>('/books'),

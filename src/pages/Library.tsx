@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
 import { api, type BookResponse } from '../api/client';
 import { BookDetailModal } from '../components/BookDetailModal';
+import { ProfileModal } from '../components/ProfileModal';
 import './Library.css';
 
 const COVER_CACHE = new Map<string, string>();
@@ -72,6 +73,7 @@ export function Library() {
   const [seeding, setSeeding] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'epub' | 'pdf' | 'audio'>('all');
+  const [showProfile, setShowProfile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadBooks = () => {
@@ -135,6 +137,9 @@ export function Library() {
           </button>
           <button className="library__btn" onClick={handleSeed} disabled={seeding}>
             {seeding ? '...' : 'Agregar demo'}
+          </button>
+          <button className="library__btn library__btn--profile" onClick={() => setShowProfile(true)}>
+            Perfil
           </button>
           <span className="library__user-name">{user?.name}</span>
           <button className="library__btn" onClick={() => { logout(); navigate('/'); }}>
@@ -230,6 +235,10 @@ export function Library() {
           onStart={() => { setSelectedBook(null); navigate(`/reader/${selectedBook._id}`); }}
           onClose={() => setSelectedBook(null)}
         />
+      )}
+
+      {showProfile && (
+        <ProfileModal onClose={() => setShowProfile(false)} />
       )}
     </div>
   );

@@ -15,6 +15,8 @@ interface AuthState {
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   verify: () => Promise<void>;
+  updateProfile: (name: string) => Promise<void>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
 }
 
 const PERSIST_KEY = 'ebook-auth';
@@ -70,6 +72,17 @@ export const useAuth = create<AuthState>((set) => ({
     const state = { token: null, user: null };
     set(state);
     localStorage.removeItem(PERSIST_KEY);
+  },
+
+  updateProfile: async (name) => {
+    const user = await api.auth.updateProfile(name);
+    const state = { token: useAuth.getState().token, user };
+    set(state);
+    persist(state);
+  },
+
+  changePassword: async (oldPassword, newPassword) => {
+    await api.auth.changePassword(oldPassword, newPassword);
   },
 
   verify: async () => {
