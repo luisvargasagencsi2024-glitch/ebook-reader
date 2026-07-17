@@ -29,6 +29,12 @@
   color: var(--text);
 }
 
+.library__header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .library__header-actions {
   display: flex;
   align-items: center;

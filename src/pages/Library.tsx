@@ -130,8 +130,8 @@ export function Library() {
   return (
     <div className="library">
       <header className="library__header">
-        <h1 className="library__title">Mi Biblioteca</h1>
-        <div className="library__header-actions">
+        <div className="library__header-left">
+          <h1 className="library__title">Mi Biblioteca</h1>
           <input
             ref={fileInputRef}
             type="file"
@@ -145,6 +145,8 @@ export function Library() {
           <button className="library__btn" onClick={handleSeed} disabled={seeding}>
             {seeding ? <><span className="btn-spinner" />Agregando...</> : 'Agregar demo'}
           </button>
+        </div>
+        <div className="library__header-actions">
           <button className="library__btn" onClick={() => setShowStats(true)}>
             Estadísticas
           </button>
