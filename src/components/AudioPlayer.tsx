@@ -34,6 +34,7 @@ export function AudioPlayer({ url, title, bookId, progress, onProgressSave, onBa
   const [playbackRate, setPlaybackRate] = useState(1);
   const [sleepTimer, setSleepTimer] = useState<number | null>(null);
   const [showSleepMenu, setShowSleepMenu] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -57,17 +58,33 @@ export function AudioPlayer({ url, title, bookId, progress, onProgressSave, onBa
     const onEnded = () => { setPlaying(false); };
     const onTimeUpdate = () => setCurrentTime(audio.currentTime);
     const onLoaded = () => setDuration(audio.duration);
+    const onError = () => {
+      const mediaErr = audio.error;
+      if (mediaErr) {
+        const msgs: Record<number, string> = {
+          1: 'La carga del audio fue cancelada.',
+          2: 'Error de red al cargar el audio.',
+          3: 'El audio está corrupto o el formato no es soportado.',
+          4: 'El formato de audio no es soportado por el navegador.',
+        };
+        setAudioError(msgs[mediaErr.code] || `Error de audio (código ${mediaErr.code})`);
+      } else {
+        setAudioError('No se pudo cargar el archivo de audio.');
+      }
+    };
     audio.addEventListener('play', onPlay);
     audio.addEventListener('pause', onPause);
     audio.addEventListener('ended', onEnded);
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('loadedmetadata', onLoaded);
+    audio.addEventListener('error', onError);
     return () => {
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('pause', onPause);
       audio.removeEventListener('ended', onEnded);
       audio.removeEventListener('timeupdate', onTimeUpdate);
       audio.removeEventListener('loadedmetadata', onLoaded);
+      audio.removeEventListener('error', onError);
     };
   }, [saveProgress]);
 
@@ -119,8 +136,12 @@ export function AudioPlayer({ url, title, bookId, progress, onProgressSave, onBa
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
+    if (audioError) setAudioError(null);
     if (playing) audio.pause();
-    else audio.play();
+    else audio.play().catch(err => {
+      console.error('Audio play error:', err);
+      setAudioError('Error al reproducir: ' + err.message);
+    });
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,6 +241,7 @@ export function AudioPlayer({ url, title, bookId, progress, onProgressSave, onBa
           </div>
         </div>
       </div>
+      {audioError && <p className="audio-player__error">{audioError}</p>}
       <audio ref={audioRef} src={url} preload="auto" />
     </div>
   );
