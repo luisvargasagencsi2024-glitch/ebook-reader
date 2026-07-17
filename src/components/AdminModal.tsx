@@ -22,6 +22,12 @@ export function AdminModal({ onClose }: AdminModalProps) {
   const [uploading, setUploading] = useState(false);
   const [reassignBookId, setReassignBookId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newRole, setNewRole] = useState('user');
+  const [creating, setCreating] = useState(false);
 
   const loadBooks = (userId?: string) => {
     api.admin.listBooks(userId || undefined).then(setBooks).catch(() => {});
@@ -92,6 +98,21 @@ export function AdminModal({ onClose }: AdminModalProps) {
     } catch {}
   };
 
+  const handleCreateUser = async () => {
+    if (!newName || !newEmail || !newPassword) return;
+    setCreating(true);
+    try {
+      const created = await api.admin.createUser(newName, newEmail, newPassword, newRole);
+      setUsers(prev => [created, ...prev]);
+      setShowCreateUser(false);
+      setNewName('');
+      setNewEmail('');
+      setNewPassword('');
+      setNewRole('user');
+    } catch {}
+    setCreating(false);
+  };
+
   const activeUsers = users.filter(u => u.active);
 
   return (
@@ -120,44 +141,84 @@ export function AdminModal({ onClose }: AdminModalProps) {
           {loading && <p className="admin-loading">Cargando...</p>}
 
           {!loading && tab === 'users' && (
-            <div className="admin-table-wrap">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(u => (
-                    <tr key={u.id}>
-                      <td>{u.name}</td>
-                      <td className="admin-cell-mono">{u.email}</td>
-                      <td>
-                        <span className={`admin-badge ${u.role === 'admin' ? 'admin-badge--admin' : ''}`}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`admin-badge ${u.active ? 'admin-badge--ok' : 'admin-badge--muted'}`}>
-                          {u.active ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </td>
-                      <td className="admin-cell-actions">
-                        <button className="admin-btn-sm" onClick={() => toggleRole(u.id, u.role)}>
-                          {u.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
-                        </button>
-                        <button className="admin-btn-sm" onClick={() => toggleActive(u.id)}>
-                          {u.active ? 'Desactivar' : 'Activar'}
-                        </button>
-                      </td>
+            <div>
+              <div className="admin-books-toolbar">
+                <button className="admin-btn-sm" onClick={() => setShowCreateUser(!showCreateUser)}>
+                  {showCreateUser ? 'Cancelar' : 'Crear usuario'}
+                </button>
+              </div>
+
+              {showCreateUser && (
+                <div className="admin-upload-form">
+                  <h4>Crear nuevo usuario</h4>
+                  <div className="admin-upload-field">
+                    <label>Nombre *</label>
+                    <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nombre del usuario" />
+                  </div>
+                  <div className="admin-upload-field">
+                    <label>Email *</label>
+                    <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="correo@ejemplo.com" />
+                  </div>
+                  <div className="admin-upload-field">
+                    <label>Contraseña *</label>
+                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Contraseña" />
+                  </div>
+                  <div className="admin-upload-field">
+                    <label>Rol</label>
+                    <select value={newRole} onChange={e => setNewRole(e.target.value)}>
+                      <option value="user">Usuario</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <button
+                    className="admin-btn-sm"
+                    onClick={handleCreateUser}
+                    disabled={!newName || !newEmail || !newPassword || creating}
+                  >
+                    {creating ? 'Creando...' : 'Crear usuario'}
+                  </button>
+                </div>
+              )}
+
+              <div className="admin-table-wrap">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Email</th>
+                      <th>Rol</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {users.map(u => (
+                      <tr key={u.id}>
+                        <td>{u.name}</td>
+                        <td className="admin-cell-mono">{u.email}</td>
+                        <td>
+                          <span className={`admin-badge ${u.role === 'admin' ? 'admin-badge--admin' : ''}`}>
+                            {u.role}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`admin-badge ${u.active ? 'admin-badge--ok' : 'admin-badge--muted'}`}>
+                            {u.active ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </td>
+                        <td className="admin-cell-actions">
+                          <button className="admin-btn-sm" onClick={() => toggleRole(u.id, u.role)}>
+                            {u.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
+                          </button>
+                          <button className="admin-btn-sm" onClick={() => toggleActive(u.id)}>
+                            {u.active ? 'Desactivar' : 'Activar'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 

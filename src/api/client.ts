@@ -101,6 +101,8 @@ export const api = {
   },
   admin: {
     listUsers: () => request<AdminUser[]>('/admin/users'),
+    createUser: (name: string, email: string, password: string, role?: string) =>
+      request<AdminUser>('/admin/users', { method: 'POST', body: JSON.stringify({ name, email, password, role }) }),
     toggleUserActive: (id: string) => request<AdminUser>(`/admin/users/${id}/toggle-active`, { method: 'PUT' }),
     setUserRole: (id: string, role: string) =>
       request<AdminUser>(`/admin/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),

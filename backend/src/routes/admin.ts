@@ -2,6 +2,7 @@ import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
+import bcrypt from 'bcrypt';
 import { User } from '../models/User.js';
 import { Book } from '../models/Book.js';
 import { Progress } from '../models/Progress.js';
@@ -32,6 +33,32 @@ router.get('/users', async (_req: AuthRequest, res) => {
     res.json(users.map(u => ({ id: u._id, email: u.email, name: u.name, role: u.role, active: u.active, createdAt: u.createdAt })));
   } catch {
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+router.post('/users', async (req: AuthRequest, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    if (!name || !email || !password) {
+      res.status(400).json({ error: 'name, email y password son requeridos' });
+      return;
+    }
+    const exists = await User.findOne({ email: email.toLowerCase() }).lean();
+    if (exists) {
+      res.status(409).json({ error: 'El email ya está registrado' });
+      return;
+    }
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      email: email.toLowerCase(),
+      password: hashed,
+      name,
+      role: role === 'admin' ? 'admin' : 'user',
+      active: true,
+    });
+    res.status(201).json({ id: user._id, email: user.email, name: user.name, role: user.role, active: user.active });
+  } catch {
+    res.status(500).json({ error: 'Failed to create user' });
   }
 });
 
