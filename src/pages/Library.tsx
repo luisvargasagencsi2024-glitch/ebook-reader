@@ -129,19 +129,23 @@ export function Library() {
       <header className="library__header">
         <h1 className="library__title">Mi Biblioteca</h1>
         <div className="library__header-actions">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".epub,.pdf,.mp3,.m4a"
-            onChange={handleUpload}
-            style={{ display: 'none' }}
-          />
-          <button className="library__btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-            {uploading ? '...' : 'Subir archivo'}
-          </button>
-          <button className="library__btn" onClick={handleSeed} disabled={seeding}>
-            {seeding ? '...' : 'Agregar demo'}
-          </button>
+          {user?.role === 'admin' && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".epub,.pdf,.mp3,.m4a"
+                onChange={handleUpload}
+                style={{ display: 'none' }}
+              />
+              <button className="library__btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                {uploading ? '...' : 'Subir archivo'}
+              </button>
+              <button className="library__btn" onClick={handleSeed} disabled={seeding}>
+                {seeding ? '...' : 'Agregar demo'}
+              </button>
+            </>
+          )}
           <button className="library__btn" onClick={() => setShowStats(true)}>
             Estadísticas
           </button>
@@ -153,17 +157,6 @@ export function Library() {
           <button className="library__btn library__btn--profile" onClick={() => setShowProfile(true)}>
             Perfil
           </button>
-          {user && user.role !== 'admin' && (
-            <button className="library__btn" onClick={async () => {
-              try {
-                const res = await api.auth.makeAdmin();
-                useAuth.setState({ token: res.token, user: res.user as any });
-                window.location.reload();
-              } catch {}
-            }}>
-              Reclamar admin
-            </button>
-          )}
           <span className="library__user-name">{user?.name}</span>
           <button className="library__btn" onClick={() => { logout(); navigate('/'); }}>
             Cerrar sesión
