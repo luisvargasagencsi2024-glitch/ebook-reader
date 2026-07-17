@@ -2,6 +2,14 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import type { ProgressData } from '../api/client';
 import './AudioPlayer.css';
 
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const SLEEP_OPTIONS = [
+  { label: '15 min', value: 15 },
+  { label: '30 min', value: 30 },
+  { label: '1 hora', value: 60 },
+  { label: 'Fin del capítulo', value: -1 },
+];
+
 interface AudioPlayerProps {
   url: string;
   title: string;
@@ -23,7 +31,11 @@ export function AudioPlayer({ url, title, bookId, progress, onProgressSave, onBa
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [sleepTimer, setSleepTimer] = useState<number | null>(null);
+  const [showSleepMenu, setShowSleepMenu] = useState(false);
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const saveProgress = useCallback(() => {
     if (!duration || !bookId) return;
@@ -67,6 +79,35 @@ export function AudioPlayer({ url, title, bookId, progress, onProgressSave, onBa
     }
     return () => { if (progressInterval.current) clearInterval(progressInterval.current); };
   }, [playing, saveProgress]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = playbackRate;
+  }, [playbackRate]);
+
+  const startSleepTimer = (minutes: number) => {
+    setShowSleepMenu(false);
+    if (minutes === -1) {
+      const remaining = duration - currentTime;
+      if (remaining > 0) {
+        setSleepTimer(Math.round(remaining / 60));
+        sleepTimerRef.current = setTimeout(() => {
+          audioRef.current?.pause();
+          setSleepTimer(null);
+        }, remaining * 1000);
+      }
+    } else {
+      setSleepTimer(minutes);
+      sleepTimerRef.current = setTimeout(() => {
+        audioRef.current?.pause();
+        setSleepTimer(null);
+      }, minutes * 60 * 1000);
+    }
+  };
+
+  const cancelSleepTimer = () => {
+    setSleepTimer(null);
+    if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+  };
 
   useEffect(() => {
     if (progress?.location && audioRef.current) {
@@ -140,6 +181,42 @@ export function AudioPlayer({ url, title, bookId, progress, onProgressSave, onBa
               onChange={handleVolume}
               className="audio-player__volume-bar"
             />
+          </div>
+          <div className="audio-player__extras">
+            <div className="audio-player__speed">
+              {SPEEDS.map(s => (
+                <button
+                  key={s}
+                  className={`audio-player__speed-btn ${playbackRate === s ? 'audio-player__speed-btn--active' : ''}`}
+                  onClick={() => setPlaybackRate(s)}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
+            <div className="audio-player__sleep">
+              <button className="audio-player__sleep-btn" onClick={() => setShowSleepMenu(prev => !prev)}>
+                {sleepTimer ? `⏰ ${sleepTimer}min` : '😴'}
+              </button>
+              {showSleepMenu && (
+                <div className="audio-player__sleep-menu">
+                  {sleepTimer && (
+                    <button className="audio-player__sleep-opt" onClick={cancelSleepTimer}>
+                      Cancelar temporizador
+                    </button>
+                  )}
+                  {SLEEP_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      className="audio-player__sleep-opt"
+                      onClick={() => startSleepTimer(opt.value)}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
