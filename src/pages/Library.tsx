@@ -130,8 +130,8 @@ export function Library() {
   return (
     <div className="library">
       <header className="library__header">
-        <div className="library__header-left">
-          <h1 className="library__title">Mi Biblioteca</h1>
+        <h1 className="library__title">Mi Biblioteca</h1>
+        <div className="library__header-actions">
           {user?.role === 'admin' && (
             <>
               <input
@@ -149,8 +149,6 @@ export function Library() {
               </button>
             </>
           )}
-        </div>
-        <div className="library__header-actions">
           <button className="library__btn" onClick={() => setShowStats(true)}>
             Estadísticas
           </button>
