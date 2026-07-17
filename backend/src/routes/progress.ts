@@ -9,6 +9,8 @@ router.use(authMiddleware);
 router.put('/:bookId', async (req: AuthRequest, res) => {
   try {
     const { currentPage, totalPages, progress, location, readingTimeMinutes } = req.body;
+    const existing = await Progress.findOne({ userId: req.userId, bookId: req.params.bookId });
+    const totalMinutes = (existing?.readingTimeMinutes ?? 0) + (readingTimeMinutes ?? 0);
     const doc = await Progress.findOneAndUpdate(
       { userId: req.userId, bookId: req.params.bookId },
       {
@@ -16,7 +18,7 @@ router.put('/:bookId', async (req: AuthRequest, res) => {
         totalPages,
         progress,
         location,
-        readingTimeMinutes,
+        readingTimeMinutes: totalMinutes,
         lastReadAt: new Date(),
       },
       { upsert: true, new: true },

@@ -57,6 +57,16 @@ export function ReaderContainer({
   const [readerSettings, setReaderSettings] = useState<ReaderSettings>(loadSettings);
   const contentRef = useRef<HTMLDivElement>(null);
   const hasAutoFitted = useRef(false);
+  const readingDeltaRef = useRef(0);
+
+  useEffect(() => {
+    if (!format || format === 'audio') return;
+    readingDeltaRef.current = 0;
+    const interval = setInterval(() => {
+      readingDeltaRef.current += 0.5;
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [format, bookId, bookFileUrl]);
 
   useEffect(() => {
     setPdfPageSize(null);
@@ -84,13 +94,17 @@ export function ReaderContainer({
     setPageInfo(`${current}/${total}`);
     const p = current / total;
     setProgress_(p);
-    onProgressSave?.({ currentPage: current, totalPages: total, progress: p, lastReadAt: new Date().toISOString() });
+    const delta = Math.round(readingDeltaRef.current);
+    readingDeltaRef.current = 0;
+    onProgressSave?.({ currentPage: current, totalPages: total, progress: p, lastReadAt: new Date().toISOString(), readingTimeMinutes: delta || undefined });
   }, [onProgressSave]);
 
   const handleEpubLocationChange = useCallback((cfi: string, pct: number) => {
     setProgress_(pct);
     setPageInfo(`${Math.round(pct * 100)}%`);
-    onProgressSave?.({ progress: pct, location: cfi, lastReadAt: new Date().toISOString() });
+    const delta = Math.round(readingDeltaRef.current);
+    readingDeltaRef.current = 0;
+    onProgressSave?.({ progress: pct, location: cfi, lastReadAt: new Date().toISOString(), readingTimeMinutes: delta || undefined });
   }, [onProgressSave]);
 
   const handlePdfPageSize = useCallback((size: { w: number; h: number }) => {

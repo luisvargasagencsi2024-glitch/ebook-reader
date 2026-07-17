@@ -4,6 +4,7 @@ import { useAuth } from '../store/auth';
 import { api, type BookResponse } from '../api/client';
 import { BookDetailModal } from '../components/BookDetailModal';
 import { ProfileModal } from '../components/ProfileModal';
+import { StatsModal } from '../components/StatsModal';
 import './Library.css';
 
 const COVER_CACHE = new Map<string, string>();
@@ -74,6 +75,7 @@ export function Library() {
   const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'epub' | 'pdf' | 'audio'>('all');
   const [showProfile, setShowProfile] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadBooks = () => {
@@ -137,6 +139,9 @@ export function Library() {
           </button>
           <button className="library__btn" onClick={handleSeed} disabled={seeding}>
             {seeding ? '...' : 'Agregar demo'}
+          </button>
+          <button className="library__btn" onClick={() => setShowStats(true)}>
+            Estadísticas
           </button>
           <button className="library__btn library__btn--profile" onClick={() => setShowProfile(true)}>
             Perfil
@@ -239,6 +244,10 @@ export function Library() {
 
       {showProfile && (
         <ProfileModal onClose={() => setShowProfile(false)} />
+      )}
+
+      {showStats && (
+        <StatsModal onClose={() => setShowStats(false)} />
       )}
     </div>
   );

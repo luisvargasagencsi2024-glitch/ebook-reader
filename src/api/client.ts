@@ -94,6 +94,9 @@ export const api = {
     delete: (id: string) =>
       request<{ success: boolean }>(`/bookmarks/${id}`, { method: 'DELETE' }),
   },
+  stats: {
+    get: () => request<StatsData>('/stats'),
+  },
   summaries: {
     list: (bookId: string) => request<SummaryData[]>(`/summaries/${bookId}`),
     create: (data: { bookId: string; scope: 'full' | 'chapter' | 'progress'; content: string }) =>
@@ -158,6 +161,19 @@ export interface SearchResult {
   href: string;
   chapterTitle: string;
   snippet: string;
+}
+
+export interface StatsData {
+  totalBooks: number;
+  totalReadingMinutes: number;
+  completedBooks: number;
+  avgProgress: number;
+  recentSessions: {
+    bookId: string;
+    lastReadAt: string;
+    readingTimeMinutes: number;
+    progress: number;
+  }[];
 }
 
 export interface SummaryData {

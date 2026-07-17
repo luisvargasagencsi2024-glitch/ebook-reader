@@ -14,6 +14,7 @@ import summaryRoutes from './routes/summary.js';
 import seedRoutes from './routes/seed.js';
 import webhookRoutes from './routes/webhooks.js';
 import searchRoutes from './routes/search.js';
+import statsRoutes from './routes/stats.js';
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use('/api/summaries', summaryRoutes);
 app.use('/api/seed', seedRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/books', searchRoutes);
+app.use('/api/stats', statsRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
