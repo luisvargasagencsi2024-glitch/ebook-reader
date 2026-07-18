@@ -25,9 +25,9 @@ export function AdminModal({ onClose }: AdminModalProps) {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState('user');
   const [creating, setCreating] = useState(false);
+  const [createdUser, setCreatedUser] = useState<{ name: string; email: string; password: string } | null>(null);
 
   const loadBooks = (userId?: string) => {
     api.admin.listBooks(userId || undefined).then(setBooks).catch(() => {});
@@ -107,16 +107,24 @@ export function AdminModal({ onClose }: AdminModalProps) {
     } catch {}
   };
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let pwd = '';
+    for (let i = 0; i < 8; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    return pwd;
+  };
+
   const handleCreateUser = async () => {
-    if (!newName || !newEmail || !newPassword) return;
+    if (!newName || !newEmail) return;
+    const pwd = generatePassword();
     setCreating(true);
     try {
-      const created = await api.admin.createUser(newName, newEmail, newPassword, newRole);
-      setUsers(prev => [created, ...prev]);
+      await api.admin.createUser(newName, newEmail, pwd, newRole);
+      setCreatedUser({ name: newName, email: newEmail, password: pwd });
+      setUsers(prev => [{ id: 'new', name: newName, email: newEmail, role: newRole, active: true, createdAt: '' }, ...prev]);
       setShowCreateUser(false);
       setNewName('');
       setNewEmail('');
-      setNewPassword('');
       setNewRole('user');
     } catch {}
     setCreating(false);
@@ -157,7 +165,20 @@ export function AdminModal({ onClose }: AdminModalProps) {
                 </button>
               </div>
 
-              {showCreateUser && (
+              {createdUser && (
+                <div className="admin-upload-form admin-success">
+                  <h4>Usuario creado</h4>
+                  <p><strong>Nombre:</strong> {createdUser.name}</p>
+                  <p><strong>Email:</strong> {createdUser.email}</p>
+                  <p><strong>Contraseña:</strong> <code className="admin-password">{createdUser.password}</code></p>
+                  <p className="admin-success-note">Copia la contraseña y compártela con el usuario.</p>
+                  <button className="admin-btn-sm" onClick={() => setCreatedUser(null)}>
+                    Aceptar
+                  </button>
+                </div>
+              )}
+
+              {showCreateUser && !createdUser && (
                 <div className="admin-upload-form">
                   <h4>Crear nuevo usuario</h4>
                   <div className="admin-upload-field">
@@ -169,20 +190,17 @@ export function AdminModal({ onClose }: AdminModalProps) {
                     <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="correo@ejemplo.com" />
                   </div>
                   <div className="admin-upload-field">
-                    <label>Contraseña *</label>
-                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Contraseña" />
-                  </div>
-                  <div className="admin-upload-field">
                     <label>Rol</label>
                     <select value={newRole} onChange={e => setNewRole(e.target.value)}>
                       <option value="user">Usuario</option>
                       <option value="admin">Admin</option>
                     </select>
                   </div>
+                  <p className="admin-password-note">La contraseña se generará automáticamente.</p>
                   <button
                     className="admin-btn-sm"
                     onClick={handleCreateUser}
-                    disabled={!newName || !newEmail || !newPassword || creating}
+                    disabled={!newName || !newEmail || creating}
                   >
                     {creating ? 'Creando...' : 'Crear usuario'}
                   </button>

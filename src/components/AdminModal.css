@@ -251,3 +251,38 @@
   color: var(--text);
   font-size: 0.85rem;
 }
+
+.admin-password-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.admin-success {
+  align-items: flex-start;
+}
+
+.admin-success h4 {
+  color: #22c55e;
+}
+
+.admin-success p {
+  margin: 0.2rem 0;
+  font-size: 0.85rem;
+}
+
+.admin-success code {
+  background: var(--surface-hover);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  user-select: all;
+}
+
+.admin-success-note {
+  color: var(--text-secondary);
+  font-size: 0.78rem !important;
+}
