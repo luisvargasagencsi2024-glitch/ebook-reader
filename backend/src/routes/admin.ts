@@ -36,6 +36,25 @@ router.get('/users', async (_req: AuthRequest, res) => {
   }
 });
 
+router.delete('/users/:id', async (req: AuthRequest, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+    const bookCount = await Book.countDocuments({ userId: req.params.id });
+    await Promise.all([
+      User.deleteOne({ _id: req.params.id }),
+      Book.deleteMany({ userId: req.params.id }),
+      Progress.deleteMany({ userId: req.params.id }),
+    ]);
+    res.json({ success: true, deletedBooks: bookCount });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 router.post('/users', async (req: AuthRequest, res) => {
   try {
     const { name, email, password, role } = req.body;

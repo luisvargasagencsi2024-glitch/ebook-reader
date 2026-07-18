@@ -62,6 +62,15 @@ export function AdminModal({ onClose }: AdminModalProps) {
     } catch {}
   };
 
+  const handleDeleteUser = async (u: AdminUser) => {
+    const msg = `¿Eliminar a "${u.name}"? También se eliminarán sus libros.`;
+    if (!window.confirm(msg)) return;
+    try {
+      await api.admin.deleteUser(u.id);
+      setUsers(prev => prev.filter(x => x.id !== u.id));
+    } catch {}
+  };
+
   const deleteBook = async (id: string) => {
     try {
       await api.admin.deleteBook(id);
@@ -210,10 +219,13 @@ export function AdminModal({ onClose }: AdminModalProps) {
                           <button className="admin-btn-sm" onClick={() => toggleRole(u.id, u.role)}>
                             {u.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
                           </button>
-                          <button className="admin-btn-sm" onClick={() => toggleActive(u.id)}>
-                            {u.active ? 'Desactivar' : 'Activar'}
-                          </button>
-                        </td>
+                        <button className="admin-btn-sm" onClick={() => toggleActive(u.id)}>
+                          {u.active ? 'Desactivar' : 'Activar'}
+                        </button>
+                        <button className="admin-btn-sm admin-btn-sm--danger" onClick={() => handleDeleteUser(u)}>
+                          Eliminar
+                        </button>
+                      </td>
                       </tr>
                     ))}
                   </tbody>
