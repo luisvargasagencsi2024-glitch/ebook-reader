@@ -9,6 +9,20 @@
   gap: 1rem;
   flex-shrink: 0;
   user-select: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+}
+
+.reader-layout:not(.reader-layout--toolbar-hidden) .reader-layout__body {
+  padding-top: 52px;
+}
+
+.reader-layout__body {
+  transition: padding-top 0.3s ease;
 }
 
 .toolbar__left,

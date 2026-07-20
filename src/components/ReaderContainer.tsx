@@ -58,6 +58,8 @@ export function ReaderContainer({
   const contentRef = useRef<HTMLDivElement>(null);
   const hasAutoFitted = useRef(false);
   const readingDeltaRef = useRef(0);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [toolbarVisible, setToolbarVisible] = useState(true);
 
   const resolvedFile = externalFile ?? localFile;
   const format = resolvedFile
@@ -94,6 +96,23 @@ export function ReaderContainer({
   useEffect(() => {
     if (bookId) localStorage.setItem(`ebook-fontsize-${bookId}`, String(fontSize));
   }, [fontSize, bookId]);
+
+  const startHideTimer = useCallback(() => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    setToolbarVisible(true);
+    if (showSidebar || showSearch || showSettings || showAiSummary) return;
+    hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 2000);
+  }, [showSidebar, showSearch, showSettings, showAiSummary]);
+
+  useEffect(() => {
+    startHideTimer();
+    const onMove = () => startHideTimer();
+    window.addEventListener('mousemove', onMove);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, [startHideTimer]);
 
   const handlePdfPageChange = useCallback((current: number, total: number) => {
     setPageInfo(`${current}/${total}`);
@@ -158,7 +177,7 @@ export function ReaderContainer({
   }
 
   return (
-    <div className="reader-layout">
+    <div className={`reader-layout ${toolbarVisible ? '' : 'reader-layout--toolbar-hidden'}`}>
       <Toolbar
         fileName={resolvedFile?.name || bookFileUrl?.split('/').pop() || ''}
         format={format || null}
@@ -188,7 +207,14 @@ export function ReaderContainer({
         onSearch={() => setShowSearch(true)}
       />
       <div className="reader-layout__body">
-        <div ref={contentRef} className="reader-layout__content">
+        <div ref={contentRef} className="reader-layout__content" onClick={() => {
+          if (toolbarVisible) {
+            setToolbarVisible(false);
+            if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+          } else {
+            startHideTimer();
+          }
+        }}>
           {format === 'epub' && (bookFileUrl || resolvedFile) && (
             <EpubReader
               url={bookFileUrl || URL.createObjectURL(resolvedFile!)}

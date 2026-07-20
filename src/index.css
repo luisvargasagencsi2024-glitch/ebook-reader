@@ -64,6 +64,13 @@ body {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  position: relative;
+}
+
+.reader-layout--toolbar-hidden .toolbar {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .reader-layout__body {
