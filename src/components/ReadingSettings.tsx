@@ -59,6 +59,7 @@ export function ReadingSettings({ settings, onChange, onClose }: ReadingSettings
           <button className="reading-settings__close" onClick={onClose}>&times;</button>
         </div>
 
+        <div className="reading-settings__body">
         <div className="reading-settings__group">
           <label className="reading-settings__label">Tipografía</label>
           <div className="reading-settings__options">
@@ -112,6 +113,7 @@ export function ReadingSettings({ settings, onChange, onClose }: ReadingSettings
               </button>
             ))}
           </div>
+        </div>
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ html[data-theme='light'] {
   --bg: #e8e0d5;
   --surface: #ffffff;
   --surface-hover: #f5f0e8;
-  --toolbar-bg: #faf8f4;
+  --toolbar-bg: rgba(250, 248, 244, 0.95);
   --text: #1a1a2e;
   --text-secondary: #6b7280;
   --text-muted: #9ca3af;
@@ -25,9 +25,9 @@ html[data-theme='light'] {
   --pdf-bg: #e8e0d5;
 
   --book-bg: #faf6ef;
-  --book-shadow: 0 8px 40px rgba(0, 0, 0, 0.18), 0 2px 10px rgba(0, 0, 0, 0.08);
-  --book-spine: linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.02) 8px, transparent 16px);
-  --page-edge: 0 0 0 1px #e8dcc8, 0 0 0 2px #f0e8d8;
+  --book-shadow: 0 2px 24px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --book-spine: linear-gradient(to right, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.01) 8px, transparent 16px);
+  --page-edge: 0 0 0 1px #e8dcc8;
   --ambient-glow: radial-gradient(ellipse at center, #f5ede4 0%, #e0d5c8 100%);
 }
 
@@ -35,7 +35,7 @@ html[data-theme='dark'] {
   --bg: #1a1814;
   --surface: #2a2520;
   --surface-hover: #353028;
-  --toolbar-bg: #221e1a;
+  --toolbar-bg: rgba(34, 30, 26, 0.95);
   --text: #e0dad0;
   --text-secondary: #a09888;
   --text-muted: #706858;
@@ -45,8 +45,8 @@ html[data-theme='dark'] {
   --pdf-bg: #1a1814;
 
   --book-bg: #2a2520;
-  --book-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
-  --book-spine: linear-gradient(to right, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.08) 8px, transparent 16px);
+  --book-shadow: 0 2px 24px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.1);
+  --book-spine: linear-gradient(to right, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0.05) 8px, transparent 16px);
   --page-edge: 0 0 0 1px #3a342c;
   --ambient-glow: radial-gradient(ellipse at center, #2a2520 0%, #14120e 100%);
 }
@@ -79,14 +79,17 @@ body {
   overflow: hidden;
 }
 
-.reader-layout__content {
+.reader-layout__body > .reader-layout__content {
   flex: 1;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
   background: var(--ambient-glow);
+}
+
+.reader-layout__content {
+  padding: 1.5rem;
 }
 
 .btn-spinner {

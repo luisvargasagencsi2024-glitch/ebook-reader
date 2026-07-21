@@ -59,7 +59,7 @@ export function ReaderContainer({
   const hasAutoFitted = useRef(false);
   const readingDeltaRef = useRef(0);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [toolbarVisible, setToolbarVisible] = useState(true);
+  const [uiVisible, setUiVisible] = useState(true);
 
   const resolvedFile = externalFile ?? localFile;
   const format = resolvedFile
@@ -99,9 +99,9 @@ export function ReaderContainer({
 
   const startHideTimer = useCallback(() => {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    setToolbarVisible(true);
+    setUiVisible(true);
     if (showSidebar || showSearch || showSettings || showAiSummary) return;
-    hideTimerRef.current = setTimeout(() => setToolbarVisible(false), 2000);
+    hideTimerRef.current = setTimeout(() => setUiVisible(false), 2000);
   }, [showSidebar, showSearch, showSettings, showAiSummary]);
 
   useEffect(() => {
@@ -172,12 +172,23 @@ export function ReaderContainer({
 
   const hasFile = !!resolvedFile || (!!bookFileUrl && !!bookFormat);
 
+  const toggleUi = () => {
+    if (uiVisible) {
+      setUiVisible(false);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    } else {
+      startHideTimer();
+    }
+  };
+
   if (!hasFile) {
     return <FileLoader onFile={(f) => setLocalFile(f)} />;
   }
 
+  const pct = Math.round(progress_ * 100);
+
   return (
-    <div className={`reader-layout ${toolbarVisible ? '' : 'reader-layout--toolbar-hidden'}`}>
+    <div className={`reader-layout ${uiVisible ? '' : 'reader-layout--toolbar-hidden'}`}>
       <Toolbar
         fileName={resolvedFile?.name || bookFileUrl?.split('/').pop() || ''}
         format={format || null}
@@ -207,14 +218,7 @@ export function ReaderContainer({
         onSearch={() => setShowSearch(true)}
       />
       <div className="reader-layout__body">
-        <div ref={contentRef} className="reader-layout__content" onClick={() => {
-          if (toolbarVisible) {
-            setToolbarVisible(false);
-            if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-          } else {
-            startHideTimer();
-          }
-        }}>
+        <div ref={contentRef} className="reader-layout__content" onClick={toggleUi}>
           {format === 'epub' && (bookFileUrl || resolvedFile) && (
             <EpubReader
               url={bookFileUrl || URL.createObjectURL(resolvedFile!)}
@@ -225,6 +229,7 @@ export function ReaderContainer({
               searchNavigateTo={searchNavigateTo}
               onLocationChange={handleEpubLocationChange}
               onHighlightCreated={() => setShowSidebar(true)}
+              onToggleToc={() => setShowToc(prev => !prev)}
             />
           )}
           {format === 'pdf' && (bookFileUrl || resolvedFile) && (
@@ -241,6 +246,16 @@ export function ReaderContainer({
           <ReaderSidebar bookId={bookId} onClose={() => setShowSidebar(false)} />
         )}
       </div>
+
+      <div className="reader-bottom-bar">
+        <div className="reader-bottom-bar__progress-line">
+          <div className="reader-bottom-bar__progress-line-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <button className="reader-bottom-bar__font-btn" onClick={() => setFontSize(Math.max(12, fontSize - 2))} disabled={fontSize <= 12}>A−</button>
+        <span className="reader-bottom-bar__info">{pct}% · {pageInfo}</span>
+        <button className="reader-bottom-bar__font-btn" onClick={() => setFontSize(Math.min(32, fontSize + 2))} disabled={fontSize >= 32}>A+</button>
+      </div>
+
       {showAiSummary && (
         <AiSummaryModal
           title={resolvedFile?.name || bookFileUrl?.split('/').pop() || 'Libro'}

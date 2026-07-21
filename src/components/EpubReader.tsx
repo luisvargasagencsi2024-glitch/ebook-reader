@@ -24,6 +24,54 @@ interface EpubReaderProps {
   onLocationChange?: (cfi: string, progress: number) => void;
   onHighlightCreated?: () => void;
   searchNavigateTo?: string | null;
+  onToggleToc?: () => void;
+}
+
+function TocDrawer({ items, onNavigate, onClose }: { items: TocItem[]; onNavigate: (href: string) => void; onClose: () => void }) {
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  return (
+    <div className="epub-toc-overlay" onClick={onClose}>
+      <nav className="epub-toc-drawer" onClick={e => e.stopPropagation()}>
+        <div className="epub-toc-drawer__header">
+          <h3 className="epub-toc-drawer__title">Contenido</h3>
+          <button className="epub-toc-drawer__close" onClick={onClose}>&times;</button>
+        </div>
+        <ul className="epub-toc-drawer__list">
+          {items.map((item, i) => (
+            <li key={i}>
+              <div className="epub-toc-drawer__item-row">
+                {item.subitems && item.subitems.length > 0 && (
+                  <button
+                    className="epub-toc-drawer__expand"
+                    onClick={() => setExpanded(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n; })}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"
+                      style={{ transform: expanded.has(i) ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </button>
+                )}
+                <button className="epub-toc-drawer__link" onClick={() => onNavigate(item.href)}>
+                  {item.label}
+                </button>
+              </div>
+              {item.subitems && expanded.has(i) && (
+                <ul className="epub-toc-drawer__sublist">
+                  {item.subitems.map((sub, j) => (
+                    <li key={j}>
+                      <button className="epub-toc-drawer__link epub-toc-drawer__link--sub" onClick={() => onNavigate(sub.href)}>
+                        {sub.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  );
 }
 
 function getCfiFromRange(_range: Range, rendition: Record<string, unknown>): string {
@@ -105,7 +153,7 @@ function getReaderCss(settings: ReaderSettingsData): string {
   `;
 }
 
-export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onLocationChange, onHighlightCreated, searchNavigateTo }: EpubReaderProps) {
+export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onLocationChange, onHighlightCreated, searchNavigateTo, onToggleToc }: EpubReaderProps) {
   const [location, setLocation] = useState<string | number>(0);
   const [toc, setToc] = useState<TocItem[]>([]);
   const [rendition, setRendition] = useState<Record<string, unknown> | null>(null);
@@ -302,35 +350,7 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
   return (
     <div className="epub-reader">
       {showToc && toc.length > 0 && (
-        <nav className="epub-reader__toc">
-          <h3 className="epub-reader__toc-title">Contenido</h3>
-          <ul className="epub-reader__toc-list">
-            {toc.map((item, i) => (
-              <li key={i}>
-                <button
-                  className="epub-reader__toc-link"
-                  onClick={() => handleTocClick(item.href)}
-                >
-                  {item.label}
-                </button>
-                {item.subitems && (
-                  <ul className="epub-reader__toc-sublist">
-                    {item.subitems.map((sub: TocItem, j: number) => (
-                      <li key={j}>
-                        <button
-                          className="epub-reader__toc-link"
-                          onClick={() => handleTocClick(sub.href)}
-                        >
-                          {sub.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <TocDrawer items={toc} onNavigate={handleTocClick} onClose={() => onToggleToc?.()} />
       )}
       <div className="epub-reader__book">
         <div className="epub-reader__view">

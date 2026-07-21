@@ -30,18 +30,9 @@ interface ToolbarProps {
 }
 
 export function Toolbar({
-  fileName,
-  format,
   bookTitle,
-  bookAuthor,
-  bookDescription,
+  fileName,
   onBack,
-  fontSize,
-  onFontSizeChange,
-  zoom,
-  onZoomChange,
-  onFitWidth,
-  onFitPage,
   progress,
   pageInfo,
   showToc,
@@ -53,9 +44,11 @@ export function Toolbar({
   onToggleFullscreen,
   onReadingSettings,
   onSearch,
+  fontSize,
+  onFontSizeChange,
 }: ToolbarProps) {
   const { theme, toggleTheme } = useTheme();
-  const [showInfo, setShowInfo] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   return (
     <header className="toolbar">
@@ -65,125 +58,89 @@ export function Toolbar({
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <div className="toolbar__book-meta">
-          <span className="toolbar__title">{bookTitle || fileName}</span>
-          {bookAuthor && <span className="toolbar__author">{bookAuthor}</span>}
-        </div>
-        {format && <span className="toolbar__format">{format === 'epub' ? 'EPUB' : 'PDF'}</span>}
+        <span className="toolbar__title">{bookTitle || fileName}</span>
       </div>
 
       <div className="toolbar__center">
-        {format === 'epub' && (
-          <>
-            <button className="toolbar__btn" onClick={() => onFontSizeChange(Math.max(12, fontSize - 2))} disabled={fontSize <= 12} title="Reducir fuente">A<sup>−</sup></button>
-            <span className="toolbar__value">{fontSize}px</span>
-            <button className="toolbar__btn" onClick={() => onFontSizeChange(Math.min(32, fontSize + 2))} disabled={fontSize >= 32} title="Aumentar fuente">A<sup>+</sup></button>
-            {onToggleToc && (
-              <button className={`toolbar__btn ${showToc ? 'toolbar__btn--active' : ''}`} onClick={onToggleToc} title="Índice">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
-          </>
-        )}
-        {format === 'pdf' && (
-          <>
-            <button className="toolbar__btn" onClick={() => onZoomChange(Math.max(0.3, zoom - 0.25))} disabled={zoom <= 0.3} title="Alejar">−</button>
-            <span className="toolbar__value">{Math.round(zoom * 100)}%</span>
-            <button className="toolbar__btn" onClick={() => onZoomChange(Math.min(4, zoom + 0.25))} disabled={zoom >= 4} title="Acercar">+</button>
-            {onFitPage && <button className="toolbar__btn" onClick={onFitPage} title="Ajustar a la pantalla">⊡</button>}
-            {onFitWidth && <button className="toolbar__btn" onClick={onFitWidth} title="Ajustar al ancho">⇔</button>}
-          </>
-        )}
+        <div className="toolbar__progress-info">{pageInfo}</div>
+        <div className="toolbar__progress-bar">
+          <div className="toolbar__progress-fill" style={{ width: `${Math.min(100, Math.max(0, progress * 100))}%` }} />
+        </div>
       </div>
 
       <div className="toolbar__right">
-        <div className="toolbar__progress" title="Progreso">
-          <span>{pageInfo}</span>
-          <div className="toolbar__progress-bar">
-            <div className="toolbar__progress-fill" style={{ width: `${Math.min(100, Math.max(0, progress * 100))}%` }} />
-          </div>
-        </div>
-
-        {bookDescription && (
-          <div className="toolbar__info-wrap">
-            <button className="toolbar__btn" onClick={() => setShowInfo(prev => !prev)} title="Información del libro">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4M12 8h.01" />
-              </svg>
-            </button>
-            {showInfo && (
-              <div className="toolbar__info-dropdown">
-                <p className="toolbar__info-text">{bookDescription}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {onSearch && (
-          <button className="toolbar__btn" onClick={onSearch} title="Buscar en el libro">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-          </button>
-        )}
-
-        {onToggleSidebar && (
-          <button className={`toolbar__btn ${showSidebar ? 'toolbar__btn--active' : ''}`} onClick={onToggleSidebar} title="Notas y marcadores">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
-              <rect x="8" y="2" width="8" height="4" rx="1" />
-              <path d="M8 12h8M8 16h5" />
-            </svg>
-          </button>
-        )}
-        {onToggleFullscreen && (
-          <button className="toolbar__btn" onClick={onToggleFullscreen} title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}>
-            {isFullscreen ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3" />
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
-              </svg>
-            )}
-          </button>
-        )}
-
-        {onReadingSettings && (
-          <button className="toolbar__btn" onClick={onReadingSettings} title="Ajustes de lectura">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
-          </button>
-        )}
-        {onAiSummary && (
-          <button className="toolbar__btn" onClick={onAiSummary} title="Resumen IA">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2a4 4 0 014 4v2a4 4 0 01-8 0V6a4 4 0 014-4z" />
-              <path d="M20 12v1a8 8 0 01-16 0v-1" />
-              <path d="M12 19v3" />
-              <path d="M9 22h6" />
-            </svg>
-          </button>
-        )}
-        <button className="toolbar__btn" onClick={toggleTheme} title="Modo oscuro/claro">
-          {theme === 'dark' ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="5" />
-              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-            </svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-            </svg>
-          )}
+        <button className="toolbar__btn toolbar__btn--icon" onClick={() => onFontSizeChange(Math.max(12, fontSize - 2))} disabled={fontSize <= 12} title="Reducir fuente">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 20h16M4 4h6M12 20V4" /></svg>
         </button>
+        <button className="toolbar__btn toolbar__btn--icon" onClick={() => onFontSizeChange(Math.min(32, fontSize + 2))} disabled={fontSize >= 32} title="Aumentar fuente">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 20h16M4 4h6M12 20V4" /><path d="M14 9h6" /></svg>
+        </button>
+        <div className="toolbar__menu-wrap">
+          <button className="toolbar__btn toolbar__btn--menu" onClick={() => setShowMenu(prev => !prev)} title="Menú">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="5" r="1.5" fill="currentColor" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+              <circle cx="12" cy="19" r="1.5" fill="currentColor" />
+            </svg>
+          </button>
+          {showMenu && (
+            <div className="toolbar__dropdown">
+              {onToggleToc && (
+                <button className={`toolbar__dropdown-item ${showToc ? 'toolbar__dropdown-item--active' : ''}`} onClick={() => { setShowMenu(false); onToggleToc(); }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+                  Índice
+                </button>
+              )}
+              {onReadingSettings && (
+                <button className="toolbar__dropdown-item" onClick={() => { setShowMenu(false); onReadingSettings(); }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
+                  Ajustes
+                </button>
+              )}
+              {onSearch && (
+                <button className="toolbar__dropdown-item" onClick={() => { setShowMenu(false); onSearch(); }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
+                  Buscar
+                </button>
+              )}
+              {onToggleSidebar && (
+                <button className={`toolbar__dropdown-item ${showSidebar ? 'toolbar__dropdown-item--active' : ''}`} onClick={() => { setShowMenu(false); onToggleSidebar(); }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" /><path d="M8 12h8M8 16h5" /></svg>
+                  Notas
+                </button>
+              )}
+              {onAiSummary && (
+                <button className="toolbar__dropdown-item" onClick={() => { setShowMenu(false); onAiSummary(); }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a4 4 0 014 4v2a4 4 0 01-8 0V6a4 4 0 014-4z" /><path d="M20 12v1a8 8 0 01-16 0v-1" /><path d="M12 19v3" /><path d="M9 22h6" /></svg>
+                  Resumen IA
+                </button>
+              )}
+              <div className="toolbar__dropdown-divider" />
+              <button className="toolbar__dropdown-item" onClick={() => { setShowMenu(false); toggleTheme(); }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  {theme === 'dark' ? (
+                    <><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></>
+                  ) : (
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                  )}
+                </svg>
+                {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+              </button>
+              {onToggleFullscreen && (
+                <button className="toolbar__dropdown-item" onClick={() => { setShowMenu(false); onToggleFullscreen(); }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    {isFullscreen ? (
+                      <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3" />
+                    ) : (
+                      <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
+                    )}
+                  </svg>
+                  {isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
