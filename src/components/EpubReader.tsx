@@ -135,7 +135,7 @@ function findTextInDoc(doc: Document, text: string): Range | null {
   }
 }
 
-function getReaderCss(settings: ReaderSettingsData): string {
+function getReaderCss(settings: ReaderSettingsData, fontSize: number): string {
   const fonts: Record<string, string> = {
     serif: '"Georgia", "Times New Roman", serif',
     sans: '-apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
@@ -148,6 +148,7 @@ function getReaderCss(settings: ReaderSettingsData): string {
   };
   const t = themes[settings.readerTheme];
   return `
+    html { font-size: ${fontSize}px !important; }
     * { font-family: ${fonts[settings.fontFamily]} !important; line-height: ${settings.lineHeight} !important; }
     body { background: ${t.bg} !important; color: ${t.text} !important; }
   `;
@@ -176,11 +177,10 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
 
   const applyReaderSettings = useCallback((renderer: { getContents?: () => { document?: Document }[] }) => {
     const contents = renderer.getContents?.() ?? [];
-    const cssText = getReaderCss(readerSettings);
+    const cssText = getReaderCss(readerSettings, fontSize);
     for (const c of contents) {
       const doc = c.document;
       if (!doc) continue;
-      doc.documentElement.style.fontSize = `${fontSize}px`;
       const styleId = 'ebook-reader-custom-css';
       let style = doc.getElementById(styleId) as HTMLStyleElement | null;
       if (!style) {
