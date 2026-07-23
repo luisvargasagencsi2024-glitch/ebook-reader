@@ -92,6 +92,12 @@ body {
   padding: 1.5rem;
 }
 
+@media (max-width: 640px) {
+  .reader-layout__content {
+    padding: 0.5rem;
+  }
+}
+
 .btn-spinner {
   display: inline-block;
   width: 14px;

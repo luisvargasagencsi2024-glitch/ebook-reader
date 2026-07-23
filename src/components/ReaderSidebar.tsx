@@ -45,8 +45,12 @@ export function ReaderSidebar({ bookId, onClose }: ReaderSidebarProps) {
     try { await api.bookmarks.delete(id); setBookmarks(prev => prev.filter(b => b._id !== id)); } catch { }
   };
 
+  const [isMobile] = useState(() => window.innerWidth <= 768);
+
   return (
-    <aside className="reader-sidebar">
+    <>
+      {isMobile && <div className="reader-sidebar__backdrop" onClick={onClose} />}
+      <aside className="reader-sidebar">
       <div className="reader-sidebar__header">
         <nav className="reader-sidebar__tabs">
           {(['notes', 'highlights', 'bookmarks'] as Tab[]).map(t => (
@@ -113,5 +117,6 @@ export function ReaderSidebar({ bookId, onClose }: ReaderSidebarProps) {
         ))}
       </div>
     </aside>
+    </>
   );
 }

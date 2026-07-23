@@ -233,3 +233,42 @@
   border-radius: 6px;
   max-width: 500px;
 }
+
+@media (max-width: 640px) {
+  .audio-player__header {
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .audio-player__body {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .audio-player__cover svg {
+    width: 80px;
+    height: 80px;
+  }
+
+  .audio-player__play-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+
+  .audio-player__extras {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .audio-player__speed-btn {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.72rem;
+    min-height: 36px;
+  }
+
+  .audio-player__volume-bar {
+    width: 70px;
+  }
+}

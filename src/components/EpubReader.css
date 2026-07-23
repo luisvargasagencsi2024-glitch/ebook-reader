@@ -197,6 +197,17 @@
   white-space: nowrap;
 }
 
+@media (max-width: 480px) {
+  .epub-reader__toolbar {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 80px;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    right: auto !important;
+  }
+}
+
 .epub-reader__toolbar-btn {
   padding: 0.3rem 0.6rem;
   border: none;

@@ -8,6 +8,33 @@
   overflow: hidden;
 }
 
+@media (max-width: 768px) {
+  .reader-sidebar {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    z-index: 150;
+    border-left: none;
+    animation: slideInRight 0.18s ease-out;
+  }
+
+  .reader-sidebar__header {
+    padding: 0.75rem 1rem;
+  }
+
+  .reader-sidebar__tab {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.85rem;
+    min-height: 44px;
+  }
+
+  .reader-sidebar__close {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+}
+
 .reader-sidebar__header {
   display: flex;
   align-items: center;
@@ -138,4 +165,23 @@
 .reader-sidebar__note-btn:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.reader-sidebar__backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .reader-sidebar__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 149;
+  }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }

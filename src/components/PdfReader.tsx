@@ -47,6 +47,9 @@ export function PdfReader({
     [onPageSizeReady],
   );
 
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+
   const goToPage = useCallback(
     (page: number) => {
       const p = Math.max(1, Math.min(numPages, page));
@@ -62,9 +65,22 @@ export function PdfReader({
     [numPages, pageNumber, onPageChange, onProgress],
   );
 
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx < 0) goToPage(pageNumber + 1);
+    else goToPage(pageNumber - 1);
+  }, [goToPage, pageNumber]);
+
   return (
     <div className="pdf-reader">
-      <div className="pdf-reader__viewport">
+      <div className="pdf-reader__viewport" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         <div className="pdf-reader__page-wrap">
           <div className="pdf-reader__page-label">
             Página {pageNumber} de {numPages}

@@ -18,6 +18,21 @@
   background: var(--pdf-bg);
 }
 
+@media (max-width: 640px) {
+  .pdf-reader__viewport {
+    padding: 0.5rem;
+  }
+
+  .pdf-reader__page-label {
+    font-size: 0.7rem;
+  }
+
+  .pdf-reader__arrow-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 .pdf-reader__viewport::-webkit-scrollbar {
   width: 10px;
   height: 10px;

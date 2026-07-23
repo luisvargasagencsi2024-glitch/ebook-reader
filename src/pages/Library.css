@@ -282,15 +282,76 @@
   grid-column: 1 / -1;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .library__header {
     padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
+
+  .library__header-actions {
+    gap: 0.4rem;
+  }
+
+  .library__btn {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.75rem;
+    min-height: 36px;
+  }
+
+  .library__user-name {
+    display: none;
+  }
+
   .library__main {
     padding: 1rem;
   }
+
   .library__grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .library__card-cover {
+    height: 160px;
+  }
+
+  .library__card-body {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .library__card-title {
+    font-size: 0.8rem;
+  }
+
+  .library__card-author {
+    font-size: 0.72rem;
+  }
+
+  .library__filter {
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+
+  .library__filter-btn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    min-height: 36px;
+  }
+}
+
+@media (max-width: 380px) {
+  .library__grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .library__card-cover {
+    height: 130px;
+  }
+
+  .library__header-actions .library__btn {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.5rem;
   }
 }
