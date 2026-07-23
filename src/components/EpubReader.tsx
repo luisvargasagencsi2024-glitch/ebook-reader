@@ -148,7 +148,7 @@ function getReaderCss(settings: ReaderSettingsData, fontSize: number): string {
   };
   const t = themes[settings.readerTheme];
   return `
-    html { font-size: ${fontSize}px !important; }
+    body { font-size: ${fontSize}px !important; }
     * { font-family: ${fonts[settings.fontFamily]} !important; line-height: ${settings.lineHeight} !important; }
     body { background: ${t.bg} !important; color: ${t.text} !important; }
   `;
