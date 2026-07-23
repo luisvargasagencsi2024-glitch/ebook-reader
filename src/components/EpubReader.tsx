@@ -174,27 +174,31 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
     }
   }, [bookId]);
 
-  const applyReaderSettings = useCallback((renderer: { getContents?: () => { document?: Document }[] }) => {
-    const contents = renderer.getContents?.() ?? [];
+  const applyReaderSettings = useCallback((renderer: Record<string, unknown>) => {
     const cssText = getReaderCss(readerSettings, fontSize);
-    for (const c of contents) {
-      const doc = c.document;
-      if (!doc) continue;
-      const styleId = 'ebook-reader-custom-css';
-      let style = doc.getElementById(styleId) as HTMLStyleElement | null;
-      if (!style) {
-        style = doc.createElement('style');
-        style.id = styleId;
-        doc.head.appendChild(style);
+    if (typeof renderer.setStyles === 'function') {
+      (renderer.setStyles as (css: string) => void)(cssText);
+    } else {
+      const contents = ((renderer.getContents as () => { doc?: Document }[])?.() ?? []);
+      for (const c of contents) {
+        const doc = c.doc;
+        if (!doc) continue;
+        const styleId = 'ebook-reader-custom-css';
+        let style = doc.getElementById(styleId) as HTMLStyleElement | null;
+        if (!style) {
+          style = doc.createElement('style');
+          style.id = styleId;
+          doc.head.appendChild(style);
+        }
+        style.textContent = cssText;
       }
-      style.textContent = cssText;
     }
   }, [fontSize, readerSettings]);
 
   useEffect(() => {
     const r = rendition;
     if (!r) return;
-    const renderer = (r as Record<string, unknown>).renderer as { getContents?: () => { document?: Document }[] } | undefined;
+    const renderer = (r as Record<string, unknown>).renderer as Record<string, unknown> | undefined;
     if (!renderer) return;
     applyReaderSettings(renderer);
   }, [applyReaderSettings, rendition]);
@@ -232,11 +236,11 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
   const restoreHighlights = useCallback(() => {
     const r = rendition;
     if (!r || highlights.length === 0) return;
-    const renderer = (r as Record<string, unknown>).renderer as { getContents: () => { document?: Document }[] } | undefined;
+    const renderer = (r as Record<string, unknown>).renderer as { getContents: () => { doc?: Document }[] } | undefined;
     if (!renderer) return;
     const contents = renderer.getContents();
     for (const c of contents) {
-      const doc = c.document;
+      const doc = c.doc;
       if (!doc) continue;
       for (const hl of highlights) {
         const key = `hl-${hl._id}`;
@@ -252,19 +256,16 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
   useEffect(() => {
     const r = rendition;
     if (!r) return;
-    const renderer = (r as Record<string, unknown>).renderer as {
-      addEventListener?: (e: string, cb: (e: CustomEvent) => void) => void;
-      getContents?: () => { document?: Document }[];
-    } | undefined;
+    const renderer = (r as Record<string, unknown>).renderer as Record<string, unknown> | undefined;
     if (!renderer) return;
 
-    const contents = renderer.getContents?.() ?? [];
+    const contents = ((renderer.getContents as () => { doc?: Document }[])?.() ?? []);
 
     const handleSelection = () => {
-      const currentContents = renderer.getContents?.();
+      const currentContents = (renderer.getContents as () => { doc?: Document }[])?.();
       if (!currentContents) return;
       for (const c of currentContents) {
-        const doc = c.document;
+        const doc = c.doc;
         if (!doc) continue;
         const sel = doc.getSelection();
         if (!sel || sel.isCollapsed || !sel.rangeCount) continue;
@@ -292,11 +293,11 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
     };
 
     for (const c of contents) {
-      c.document?.addEventListener('mouseup', handleSelection);
-      c.document?.addEventListener('mousedown', handleMouseDown);
+      c.doc?.addEventListener('mouseup', handleSelection);
+      c.doc?.addEventListener('mousedown', handleMouseDown);
     }
 
-    renderer.addEventListener?.('load', () => {
+    (renderer as unknown as { addEventListener?: (e: string, cb: (e: CustomEvent) => void) => void }).addEventListener?.('load', () => {
       setTimeout(() => {
         restoreHighlights();
         applyReaderSettings(renderer);
@@ -304,9 +305,9 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
     });
 
     return () => {
-      for (const c of renderer.getContents?.() ?? []) {
-        c.document?.removeEventListener('mouseup', handleSelection);
-        c.document?.removeEventListener('mousedown', handleMouseDown);
+      for (const c of (renderer.getContents as () => { doc?: Document }[])?.() ?? []) {
+        c.doc?.removeEventListener('mouseup', handleSelection);
+        c.doc?.removeEventListener('mousedown', handleMouseDown);
       }
     };
   }, [rendition, restoreHighlights]);
@@ -318,11 +319,11 @@ export function EpubReader({ url, fontSize, readerSettings, showToc, bookId, onL
 
     const cfi = getCfiFromRange(toolbar.range, r);
 
-    const renderer = (r as Record<string, unknown>).renderer as { getContents: () => { document?: Document }[] } | undefined;
+    const renderer = (r as Record<string, unknown>).renderer as { getContents: () => { doc?: Document }[] } | undefined;
     const contents = renderer?.getContents();
     if (contents) {
       for (const c of contents) {
-        const doc = c.document;
+        const doc = c.doc;
         if (!doc) continue;
         const key = `sel-${Date.now()}`;
         applyHighlightToDoc(doc, toolbar.text, key);
