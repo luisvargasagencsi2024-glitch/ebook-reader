@@ -172,6 +172,34 @@ export function ReaderContainer({
 
   const hasFile = !!resolvedFile || (!!bookFileUrl && !!bookFormat);
 
+  const handleDecreaseFont = useCallback(() => {
+    if (format === 'pdf') {
+      setZoom(Math.max(0.3, +(zoom - 0.1).toFixed(2)));
+    } else {
+      setFontSize(Math.max(12, fontSize - 2));
+    }
+  }, [format, fontSize, zoom]);
+
+  const handleIncreaseFont = useCallback(() => {
+    if (format === 'pdf') {
+      setZoom(Math.min(4, +(zoom + 0.1).toFixed(2)));
+    } else {
+      setFontSize(Math.min(32, fontSize + 2));
+    }
+  }, [format, fontSize, zoom]);
+
+  const handleToolbarFontChange = useCallback((newSize: number) => {
+    if (format === 'pdf') {
+      if (newSize > fontSize) {
+        setZoom(prev => Math.min(4, +(prev + 0.1).toFixed(2)));
+      } else {
+        setZoom(prev => Math.max(0.3, +(prev - 0.1).toFixed(2)));
+      }
+    } else {
+      setFontSize(newSize);
+    }
+  }, [format, fontSize]);
+
   const toggleUi = () => {
     if (uiVisible) {
       setUiVisible(false);
@@ -200,7 +228,7 @@ export function ReaderContainer({
           onBack?.();
         }}
         fontSize={fontSize}
-        onFontSizeChange={setFontSize}
+        onFontSizeChange={handleToolbarFontChange}
         zoom={zoom}
         onZoomChange={setZoom}
         onFitWidth={format === 'pdf' ? handleFitWidth : undefined}
@@ -251,9 +279,9 @@ export function ReaderContainer({
         <div className="reader-bottom-bar__progress-line">
           <div className="reader-bottom-bar__progress-line-fill" style={{ width: `${pct}%` }} />
         </div>
-        <button className="reader-bottom-bar__font-btn" onClick={() => setFontSize(Math.max(12, fontSize - 2))} disabled={fontSize <= 12}>A−</button>
+        <button className="reader-bottom-bar__font-btn" onClick={handleDecreaseFont} disabled={format === 'pdf' ? zoom <= 0.3 : fontSize <= 12}>A−</button>
         <span className="reader-bottom-bar__info">{pct}% · {pageInfo}</span>
-        <button className="reader-bottom-bar__font-btn" onClick={() => setFontSize(Math.min(32, fontSize + 2))} disabled={fontSize >= 32}>A+</button>
+        <button className="reader-bottom-bar__font-btn" onClick={handleIncreaseFont} disabled={format === 'pdf' ? zoom >= 4 : fontSize >= 32}>A+</button>
       </div>
 
       {showAiSummary && (
